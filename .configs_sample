@@ -1,0 +1,23 @@
+# Copy this file to .configs and enter your settings.
+
+# Elastic Search API Settings:
+apiurl: es_url
+apiuser: username
+apipassword: password
+
+# Leave embedding_api_host blank to disable AI Search:
+embedding_api_host: api.host.url:port
+embedding_api_user: USER
+embedding_api_password: PW
+
+# Organization / Location specific settings:
+contact_email: contact@email.com
+location_name: the City of Edmonton
+neighbourhoods_file: https://data.edmonton.ca/resource/65fr-66s6.geojson
+
+# You can specify index names or alias names here.
+default_index_aliases: ['es_alias_1','es_alias_2','es_index_1']
+
+results_per_page: 30
+n_char_no_match: 100
+n_char_highlights: 100
