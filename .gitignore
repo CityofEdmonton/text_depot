@@ -3,7 +3,6 @@
 *.Rproj
 app_key_dir
 app_vault_dir
-.deploy_vars
 .configs
 decode.sh
 .devcontainer/
