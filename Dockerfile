@@ -1,46 +1,11 @@
 # syntax = docker/dockerfile:1.0-experimental # https://docs.docker.com/develop/develop-images/build_enhancements/
-FROM rocker/r-ver:4.0.3
+FROM rocker/r-ver:4.0.5
 
 RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   && apt-get install -y \
-  alien \
-  bzip2 \
-  cmake \
-  curl \
-  file \
-  gdal-bin \
-  gnupg2 \
-  libaio1 \
-  libapparmor1 \
-  libcairo2 \
-  libcairo2-dev \
-  libcurl4-openssl-dev \
-  libedit2 \
   libgdal-dev \
-  libglpk-dev \
-  libpoppler-cpp-dev \
-  libproj-dev \
-  libsqliteodbc \
-  libssl-dev \
   libudunits2-dev \
-  libxml2-dev \
-  libxt-dev \
   libxt6 \
-  lsb-release \
-  odbc-postgresql \
-  openjdk-8-jdk \
-  openssh-client \
-  pandoc \
-  pandoc-citeproc \
-  postgresql \
-  procps \
-  psmisc \
-  r-cran-cairo \
-  swaks \
-  tcl-dev \
-  tk-dev \
-  unixodbc \
-  zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # get from https://packagemanager.rstudio.com/client/#/repos/1/overview
