@@ -20,6 +20,7 @@ function(input, output, session) {
       mutate(display_name = tools::toTitleCase(gsub("_", " ", alias_name, fixed = TRUE))) %>%
       mutate(db_size = purrr::map_dbl(alias_name, function(index) {
         query_count(es_connection, index = index)
+  
       }))
 
     dataset_info <- dataset_info %>%
@@ -32,6 +33,13 @@ function(input, output, session) {
       tidyr::unnest_wider(date_range, names_sep = "_") %>%
       mutate(date_range_min = as.Date(date_range_min),
              date_range_max = as.Date(date_range_max)) %>%
+      ungroup()
+
+    #computing max/min sentiment_polarity for each index to be used in plotting functions...
+    dataset_info <- dataset_info %>%
+      group_by(alias_name) %>%
+      mutate(sentiment_range = list(stats_for_field(es_connection, index_name, "sentiment_polarity",numeric = TRUE)[c("min", "max")])) %>%
+      tidyr::unnest_wider(sentiment_range, names_sep = "_") %>%
       ungroup()
 
     dataset_info
