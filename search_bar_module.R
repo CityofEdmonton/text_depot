@@ -27,6 +27,7 @@ searchBarUI <- function(id){
                                                  checkIcon = list(yes = icon("ok", lib = "glyphicon"),
                                                                   no = icon("remove", lib = "glyphicon"))),
               uiOutput(ns("date_range_ui"), style = "padding-left: 10px"),
+              uiOutput(ns("sentiment_range_ui")),
               uiOutput(ns("data_source_ui")),
 
               # Only turn on AI search if we've specified an API Host:
@@ -117,7 +118,7 @@ searchBar <- function(input, output, session,
     return(range)
   })
 
-  output$date_range_ui <- renderUI({
+  output$date_range_ui <- renderUI({  
     min = as.Date(date_stats()$min)
     max = as.Date(date_stats()$max)
     dateRangeInput(
@@ -126,6 +127,37 @@ searchBar <- function(input, output, session,
       start = min,
       end = max)
   })
+
+  
+  sentiment_stats <- reactive({
+    stats_for_field(es_connection, data_set_info()$alias_name, "sentiment_polarity",numeric = TRUE)
+  })
+
+  selected_sentiment_range <- reactive({
+    range = c(sentiment_stats()$min, sentiment_stats()$max)
+
+    # Check that UI element exists and that valid sentiment are there:
+    if (!is.null(input$sentiment_range)) {
+      if ((!is.na(input$sentiment_range[1])) &
+          (!is.na(input$sentiment_range[2]))) {
+        range = input$sentiment_range
+      }
+    }
+
+    return(range)
+  })
+
+  output$sentiment_range_ui <- renderUI({
+    min_val = sentiment_stats()$min
+    max_val = sentiment_stats()$max
+    sliderInput(
+      inputId = session$ns("sentiment_range"),
+      label = "Sentiment Range",
+      min = min_val,
+      max = max_val,
+      value = c(min_val,max_val),step=0.05)
+  })
+
 
   selected_data_sources <- reactive({
     data_sets <- data_set_info()$alias_name
@@ -166,6 +198,8 @@ searchBar <- function(input, output, session,
                                                       min_score = 0,
                                                       min_date = selected_date_range()[1],
                                                       max_date = selected_date_range()[2],
+                                                      min_sentiment = selected_sentiment_range()[1],
+                                                      max_sentiment = selected_sentiment_range()[2],
                                                       use_embeddings = use_embeddings_setting()),
                                     aggregates_json = statsPerIndexQuery())
 
@@ -191,6 +225,8 @@ searchBar <- function(input, output, session,
          min_score = 0,
          min_date = selected_date_range()[1],
          max_date = selected_date_range()[2],
+         min_sentiment = selected_sentiment_range()[1],
+         max_sentiment = selected_sentiment_range()[2],
          num_hits = sum(aggregations()$counts_by_index$doc_count),
          use_embeddings = use_embeddings_setting())
   })
