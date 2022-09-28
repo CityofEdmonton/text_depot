@@ -99,7 +99,7 @@ index_to_alias_mapping <- function(es, alias_names) {
     tidyr::unnest_wider(value) %>%
     filter(str_detect(index_name, "coe_td_"))
 
-  if ("aliases" %in% names(mapping_df)) {
+  if (!all(is.na(mapping_df$aliases))) { 
     mapping_df = mapping_df %>%
       tidyr::unnest_longer(aliases, indices_to = "alias_name") %>%
       select(-aliases) %>%
@@ -125,7 +125,7 @@ query_count <- function(conn, index) {
 search_body <- function(query,
                         search_fields,
                         min_score = 0,
-                        min_date = "2000-01-01",
+                        min_date = "1900-01-01",
                         max_date = Sys.Date(),
                         use_embedding_search = FALSE) {
   fields_str = paste0('"', search_fields, '"', collapse = ", ")
@@ -325,10 +325,14 @@ query_text_depot <- function(query_info = NULL,
   results
 }
 
-get_embedding_vector <- function(query, api_url, api_user, api_password) {
+get_embedding_vector <- function(query, 
+                                 api_url, 
+                                 api_user, 
+                                 api_password,
+                                 api_version = "v1") {
   query = URLencode(query)
   res = api_url %>%
-    paste0("/embeddings_api/v1/embed_query?query=", query) %>%
+    paste0("/embeddings_api/", api_version, "/embed_query?query=", query) %>%
     httr::GET(authenticate(api_user, api_password)) %>%
     httr::content()
   unlist(res$embedding_vector)
