@@ -127,16 +127,32 @@ search_body <- function(query,
                         min_score = 0,
                         min_date = "1900-01-01",
                         max_date = Sys.Date(),
+                        min_sentiment = -1,
+                        max_sentiment = 1,
                         use_embedding_search = FALSE) {
   fields_str = paste0('"', search_fields, '"', collapse = ", ")
 
   filter_str = glue::glue('
-  "range": {
-    "date": {
-      "gte": "<{min_date}>",
-      "lte": "<{max_date}>"
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "date": {
+              "gte": "<{min_date}>",
+              "lte": "<{max_date}>"
+            }
+          }
+        },
+        {
+          "range": {
+            "sentiment_polarity": {
+              "gte": "<{min_sentiment}>",
+              "lte": "<{max_sentiment}>"
+            }
+          }
+        }
+      ]
     }
-  }
   ', .open = "<{", .close = "}>")
 
   if (use_embedding_search) {
@@ -295,6 +311,8 @@ query_text_depot <- function(query_info = NULL,
   min_score = query_info$min_score
   min_date = query_info$min_date
   max_date = query_info$max_date
+  min_sentiment = query_info$min_sentiment
+  max_sentiment = query_info$max_sentiment
   use_embeddings = query_info$use_embeddings
   query_search <- search_body(
     query = query_str,
@@ -302,6 +320,8 @@ query_text_depot <- function(query_info = NULL,
     min_score = min_score,
     min_date = min_date,
     max_date = max_date,
+    min_sentiment = min_sentiment,
+    max_sentiment = max_sentiment,
     use_embedding_search = use_embeddings
   )
 

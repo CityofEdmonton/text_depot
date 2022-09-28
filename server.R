@@ -20,6 +20,7 @@ function(input, output, session) {
       mutate(display_name = tools::toTitleCase(gsub("_", " ", alias_name, fixed = TRUE))) %>%
       mutate(db_size = purrr::map_dbl(alias_name, function(index) {
         query_count(es_connection, index = index)
+  
       }))
 
     dataset_info <- dataset_info %>%
