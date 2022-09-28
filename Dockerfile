@@ -9,16 +9,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   xdg-utils \
   && rm -rf /var/lib/apt/lists/*
 
-# Prev:
-# Freezing packages to April 22, 2021:
-# RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/focal/2511902'))" >> $R_HOME/etc/Rprofile.site
-
-# get from https://packagemanager.rstudio.com/client/#/repos/1/overview
 # Freezing packages:
-# RUN echo "options(repos = c(REPO_NAME = 'https://mran.microsoft.com/snapshot/2022-04-22'))" >> $R_HOME/etc/Rprofile.site
-# RUN echo "options(repos = c(REPO_NAME = 'https://mran.microsoft.com/snapshot/2021-04-04'))" >> $R_HOME/etc/Rprofile.site
-
-RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/bionic/2021-04-22+MToyNDg4NDkxLDI6MTc1MDc1MjtCQzY2NDc5Rg'))" >> $R_HOME/etc/Rprofile.site
+RUN echo "options(repos = c(REPO_NAME = 'https://mran.microsoft.com/snapshot/2022-04-22'))" >> $R_HOME/etc/Rprofile.site
 
 RUN R -e "options(warn = 2); install.packages(c('assertthat', \
   'data.table', \
