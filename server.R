@@ -56,11 +56,12 @@ function(input, output, session) {
           style = "text-align: left"
         ),
         br(), br(),
-        tableOutput("index_stats") %>% shinycssloaders::withSpinner(proxy.height = "50px"),
+        column(12, align = "center", 
+               tableOutput("index_stats") %>% shinycssloaders::withSpinner(proxy.height = "50px")),
         br(), br(),
         "Have another data set to suggest? Email ", a(get_configs()$contact_email, href = paste0("mailto:", get_configs()$contact_email))
       ),
-      width = 1000,
+      width = 1200,
       html = TRUE
     )
 

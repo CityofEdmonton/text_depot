@@ -70,7 +70,7 @@ get_aliases <- function(session = NULL) {
   }
 
   if (length(aliases) == 0) {
-    stop("User does not have permission to access any aliases")
+    stop("User does not have permission to access any aliases, or no aliases specified in .configs!")
   }
   return(aliases)
 }
