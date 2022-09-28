@@ -64,7 +64,7 @@ mapPlot <- function(input, output, session,
                      options = list(placeholder = 'Type here')),
       circle = FALSE,
       status = "primary",
-      icon = icon("gear"),
+      icon = icon("cog"),
       width = "300px",
       tooltip = shinyWidgets::tooltipOptions(title = "Map Options")
     )

@@ -11,7 +11,7 @@ searchResultsTableUI <- function(id, include_table_options = FALSE){
           label = "table options",
           circle = FALSE,
           status = "primary",
-          icon = icon("gear"),
+          icon = icon("cog"),
           size = "xs",
           inputId = ns("table_options"))
       }

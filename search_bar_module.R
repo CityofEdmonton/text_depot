@@ -44,7 +44,7 @@ searchBarUI <- function(id){
 
               circle = FALSE,
               status = "primary",
-              icon = icon("gear"),
+              icon = icon("cog"),
               width = "600px",
               tooltip = shinyWidgets::tooltipOptions(title = "Advanced Options")
             ),
@@ -75,7 +75,7 @@ searchBar <- function(input, output, session,
                               value = query_param,
                               placeholder = "Type Search Here",
                               btnSearch = icon("search"),
-                              btnReset = icon("remove"),
+                              btnReset = icon("times"),
                               width = "100%")
   })
 
