@@ -129,7 +129,7 @@ searchBar <- function(input, output, session,
   })
 
   
-sentiment_stats <- reactive({
+  sentiment_stats <- reactive({
     stats_for_field(es_connection, data_set_info()$alias_name, "sentiment_polarity",numeric = TRUE)
   })
 

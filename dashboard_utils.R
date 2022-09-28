@@ -133,26 +133,26 @@ search_body <- function(query,
   fields_str = paste0('"', search_fields, '"', collapse = ", ")
 
   filter_str = glue::glue('
-  "bool": {
-          "must": [
-            {
-               "range": {
-                  "date": {
-                    "gte": "<{min_date}>",
-                    "lte": "<{max_date}>"
-                  }
-  }
-            },
-            {
-               "range": {
-                  "sentiment_polarity": {
-                    "gte": "<{min_sentiment}>",
-                    "lte": "<{max_sentiment}>"
-                  }
-  }
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "date": {
+              "gte": "<{min_date}>",
+              "lte": "<{max_date}>"
             }
-          ]
+          }
+        },
+        {
+          "range": {
+            "sentiment_polarity": {
+              "gte": "<{min_sentiment}>",
+              "lte": "<{max_sentiment}>"
+            }
+          }
         }
+      ]
+    }
   ', .open = "<{", .close = "}>")
 
   if (use_embedding_search) {
