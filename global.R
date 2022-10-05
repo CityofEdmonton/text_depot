@@ -1,4 +1,4 @@
-library(data.table, warn.conflicts = FALSE)
+suppressPackageStartupMessages(library(data.table, warn.conflicts = FALSE))
 library(dplyr, warn.conflicts = FALSE)
 library(DT, warn.conflicts = FALSE)
 library(elastic, warn.conflicts = FALSE)

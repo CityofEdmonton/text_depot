@@ -235,11 +235,39 @@ searchBar <- function(input, output, session,
 }
 
 statsPerIndexQuery <- function(){
+  # TODO:
+
+  # Try this: https://www.elastic.co/guide/en/elasticsearch/reference/7.17/search-aggregations-bucket-filter-aggregation.html
+
+  
+  # '
+  # "aggs": {
+  #   "group_by_index": {
+  #     "terms": {
+  #       "field": "_index"
+  #     }
+  #   }
+  # }
+  # '
   '
   "aggs": {
-    "group_by_index": {
-      "terms": {
-        "field": "_index"
+    "by_score": {
+      "range": {
+          "script": {
+            "source": "_score"
+          },
+          "ranges": [
+              {
+                  "from": 13
+              }
+            ]
+      },
+      "aggs": {
+        "group_by_index": {
+          "terms": {
+            "field": "_index"
+          }
+        }
       }
     }
   }

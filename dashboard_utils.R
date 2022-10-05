@@ -332,6 +332,9 @@ query_text_depot <- function(query_info = NULL,
                          highlights_json
   )
 
+  print("HERE I AM")
+  print(query)
+
   results <- elastic::Search(conn = conn,
                              index = index,
                              body = query,
@@ -405,20 +408,36 @@ parse_hits <- function(es_results, index_to_db_map) {
 }
 
 parse_aggregates <- function(es_results) {
-  keys <- es_results$aggregations$group_by_index$buckets$key
+  keys = es_results$aggregations$by_score$buckets$group_by_index.buckets[[1]]$key
 
-  counts_by_index <- bind_cols(index = es_results$aggregations$group_by_index$buckets$key,
-                               doc_count = es_results$aggregations$group_by_index$buckets$doc_count)
+  counts_by_index = bind_cols(index = keys,
+                              doc_count = es_results$aggregations$by_score$buckets$group_by_index.buckets[[1]]$doc_count)
 
-  aggregate_names <- setdiff(names(es_results$aggregations$group_by_index$buckets), c("key", "doc_count"))
-  results <- es_results$aggregations$group_by_index$buckets[aggregate_names]
+  aggregate_names = setdiff(names(es_results$aggregations$by_score$buckets), c("key", "doc_count", "group_by_index.buckets"))
+  results = es_results$aggregations$by_score$buckets[aggregate_names]
 
-  results_parsed <- purrr::map(results, function(x) {
-    names(x) <- keys
-    bind_rows(x, .id = "index")
-  })
+  # results_parsed <- purrr::map(results, function(x) {
+  #   names(x) <- keys
+  #   bind_rows(x, .id = "index")
+  # })
 
-  results_parsed <- c(list(counts_by_index = counts_by_index), results_parsed)
+  # results_parsed = c(list(counts_by_index = counts_by_index), results_parsed)
+
+  results_parsed = c(list(counts_by_index = counts_by_index), NULL)
+
+
+  # OLD:
+#   Browse[1]> results_parsed
+# $counts_by_index
+# # A tibble: 1 × 2
+#   index                            doc_count
+#   <chr>                                <int>
+# 1 coe_td_council_report_files_test     14233
+
+  print("PARSING")
+  print(results_parsed)
+  browser()
+
 
   return(results_parsed)
 }
