@@ -174,6 +174,8 @@ embedding_search_body <- function(query,
                                   api_password,
                                   vector_field = 'source_title_vector') {
   vector = get_embedding_vector(query, api_url, api_user, api_password)
+  if (is.null(vector)) { return('') }
+
   vector_str = paste0("[", paste0(vector, collapse = ", "), "]")
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl-script-score-query.html#vector-functions
@@ -355,6 +357,12 @@ get_embedding_vector <- function(query,
     paste0("/embeddings_api/", api_version, "/embed_query?query=", query) %>%
     httr::GET(authenticate(api_user, api_password)) %>%
     httr::content()
+
+  if ("error" %in% names(res)) {
+    write(paste0("ERROR From API in get_embedding_vector: ", as.character(res)), stderr())
+    return(NULL)
+  }
+
   unlist(res$embedding_vector)
 }
 
