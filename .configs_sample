@@ -9,6 +9,7 @@ apipassword: password
 embedding_api_host: api.host.url:port
 embedding_api_user: USER
 embedding_api_password: PW
+embedding_api_version: v2
 
 # Organization / Location specific settings:
 contact_email: contact@email.com

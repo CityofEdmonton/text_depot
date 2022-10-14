@@ -159,7 +159,16 @@ search_body <- function(query,
     # min_score should be in [0, 1]
     # min_score = 0.55 # This suggests using at least 0.5 for Doc2Vec: https://radimrehurek.com/gensim/auto_examples/howtos/run_doc2vec_imdb.html
     min_score = 0.35 # FastText needs a lower min_score
-    embedding_search_body(query, fields_str, filter_str, min_score, get_configs()$embedding_api_host, get_configs()$embedding_api_user, get_configs()$embedding_api_password)
+    vector_fields = paste0(search_fields, "_vector")
+    embedding_search_body(query, 
+                          fields_str, 
+                          filter_str, 
+                          min_score, 
+                          get_configs()$embedding_api_host, 
+                          get_configs()$embedding_api_user, 
+                          get_configs()$embedding_api_password, 
+                          get_configs()$embedding_api_version,
+                          vector_fields)
   } else {
     standard_search_body(query, fields_str, filter_str, min_score)
   }
@@ -172,14 +181,26 @@ embedding_search_body <- function(query,
                                   api_url,
                                   api_user,
                                   api_password,
-                                  vector_field = 'source_title_vector') {
-  vector = get_embedding_vector(query, api_url, api_user, api_password)
+                                  api_version,
+                                  vector_fields_to_search) {
+  vector = get_embedding_vector(query, api_url, api_user, api_password, api_version)
   if (is.null(vector)) { return('') }
 
   vector_str = paste0("[", paste0(vector, collapse = ", "), "]")
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl-script-score-query.html#vector-functions
-  min_score = min_score + 1.0 # Cosine similarity function below adds 1.0 to score
+  min_score = min_score + 1.0 # Cosine similarity function below adds 1.0 to score, to avoid negative scores.
+
+  # "source": """
+  #   def titlesim = doc['source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'source_title_vector') + 1;
+  #   def textsim = doc['text_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'text_vector') + 1;
+  #   def parentsim = doc['parent_source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'parent_source_title_vector') + 1;
+  #   def currscore = Math.max(titlesim, textsim);
+  #   currscore = Math.max(currscore, parentsim);
+  # """
+
+  # TODO: REMOVE XISTS BELOW
+
 
   # We have to filter to those that have the vector, since some documents might not be embedded.
   glue::glue('
@@ -334,6 +355,8 @@ query_text_depot <- function(query_info = NULL,
                          highlights_json
   )
 
+  print(query)
+
   results <- elastic::Search(conn = conn,
                              index = index,
                              body = query,
@@ -351,7 +374,7 @@ get_embedding_vector <- function(query,
                                  api_url, 
                                  api_user, 
                                  api_password,
-                                 api_version = "v1") {
+                                 api_version) {
   query = URLencode(query)
   res = api_url %>%
     paste0("/embeddings_api/", api_version, "/embed_query?query=", query) %>%
