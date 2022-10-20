@@ -191,18 +191,28 @@ embedding_search_body <- function(query,
   # https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl-script-score-query.html#vector-functions
   min_score = min_score + 1.0 # Cosine similarity function below adds 1.0 to score, to avoid negative scores.
 
-  # "source": """
-  #   def titlesim = doc['source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'source_title_vector') + 1;
-  #   def textsim = doc['text_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'text_vector') + 1;
-  #   def parentsim = doc['parent_source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'parent_source_title_vector') + 1;
-  #   def currscore = Math.max(titlesim, textsim);
-  #   currscore = Math.max(currscore, parentsim);
-  # """
+  # Calculate similarity to each field, if they've been defined as a field to search. Otherwise set to zero:
+  text_sim = "def textsim = 0; "
+  if ('text_vector' %in% vector_fields_to_search) { 
+    text_sim = "def textsim = doc['text_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'text_vector') + 1; "
+  }
 
-  # TODO: REMOVE XISTS BELOW
+  parent_sim = "def parentsim = 0; "
+  if ('parent_source_title_vector' %in% vector_fields_to_search) { 
+    parent_sim = "def parentsim = doc['parent_source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'parent_source_title_vector') + 1; " 
+  }
 
+  title_sim = "def titlesim = 0; "
+  if ('source_title_vector' %in% vector_fields_to_search) { 
+    title_sim = "def titlesim = doc['source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'source_title_vector') + 1; " 
+  }
 
-  # We have to filter to those that have the vector, since some documents might not be embedded.
+  # Get the max of the similarity to each field:
+  script_block = paste0(text_sim, 
+                        parent_sim, 
+                        title_sim,
+                        "def currscore = Math.max(titlesim, textsim); ",
+                        "Math.max(currscore, parentsim);")
   glue::glue('
     "min_score": <{min_score}>,
     "query": {
@@ -212,15 +222,12 @@ embedding_search_body <- function(query,
             "filter": [
               {
                 <{filter_str}>
-              },
-              {
-                "exists": { "field": "<{vector_field}>" }
               }
             ]
           }
         },
         "script": {
-          "source": "cosineSimilarity(params.queryVector, \'<{vector_field}>\') + 1.0",
+          "source": "<{script_block}>",
           "params": {"queryVector": <{vector_str}>}
         }
       }
@@ -354,8 +361,6 @@ query_text_depot <- function(query_info = NULL,
                          source_json,
                          highlights_json
   )
-
-  print(query)
 
   results <- elastic::Search(conn = conn,
                              index = index,
