@@ -184,7 +184,6 @@ embedding_search_body <- function(query,
                                   api_version,
                                   vector_fields_to_search) {
   vector = get_embedding_vector(query, api_url, api_user, api_password, api_version)
-  if (is.null(vector)) { return('') }
 
   vector_str = paste0("[", paste0(vector, collapse = ", "), "]")
 
@@ -381,17 +380,17 @@ get_embedding_vector <- function(query,
                                  api_password,
                                  api_version) {
   query = URLencode(query)
-  res = api_url %>%
+  response = api_url %>%
     paste0("/embeddings_api/", api_version, "/embed_query?query=", query) %>%
-    httr::GET(authenticate(api_user, api_password)) %>%
-    httr::content()
-
-  if ("error" %in% names(res)) {
-    write(paste0("ERROR From API in get_embedding_vector: ", as.character(res)), stderr())
-    return(NULL)
+    httr::GET(authenticate(api_user, api_password)) 
+    
+  if (response$status != 200) { 
+    stop(paste0("ERROR From API at ", api_url, " with user ", api_user, " in get_embedding_vector(): ", as.character(response))) 
   }
 
-  unlist(res$embedding_vector)
+  content = httr::content(response)
+
+  unlist(content$embedding_vector)  
 }
 
 parse_hits <- function(es_results, index_to_db_map) {
