@@ -159,7 +159,16 @@ search_body <- function(query,
     # min_score should be in [0, 1]
     # min_score = 0.55 # This suggests using at least 0.5 for Doc2Vec: https://radimrehurek.com/gensim/auto_examples/howtos/run_doc2vec_imdb.html
     min_score = 0.35 # FastText needs a lower min_score
-    embedding_search_body(query, fields_str, filter_str, min_score, get_configs()$embedding_api_host, get_configs()$embedding_api_user, get_configs()$embedding_api_password)
+    vector_fields = paste0(search_fields, "_vector")
+    embedding_search_body(query, 
+                          fields_str, 
+                          filter_str, 
+                          min_score, 
+                          get_configs()$embedding_api_host, 
+                          get_configs()$embedding_api_user, 
+                          get_configs()$embedding_api_password, 
+                          get_configs()$embedding_api_version,
+                          vector_fields)
   } else {
     standard_search_body(query, fields_str, filter_str, min_score)
   }
@@ -172,14 +181,37 @@ embedding_search_body <- function(query,
                                   api_url,
                                   api_user,
                                   api_password,
-                                  vector_field = 'source_title_vector') {
-  vector = get_embedding_vector(query, api_url, api_user, api_password)
+                                  api_version,
+                                  vector_fields_to_search) {
+  vector = get_embedding_vector(query, api_url, api_user, api_password, api_version)
+
   vector_str = paste0("[", paste0(vector, collapse = ", "), "]")
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl-script-score-query.html#vector-functions
-  min_score = min_score + 1.0 # Cosine similarity function below adds 1.0 to score
+  min_score = min_score + 1.0 # Cosine similarity function below adds 1.0 to score, to avoid negative scores.
 
-  # We have to filter to those that have the vector, since some documents might not be embedded.
+  # Calculate similarity to each field, if they've been defined as a field to search. Otherwise set to zero:
+  text_sim = "def textsim = 0; "
+  if ('text_vector' %in% vector_fields_to_search) { 
+    text_sim = "def textsim = doc['text_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'text_vector') + 1; "
+  }
+
+  parent_sim = "def parentsim = 0; "
+  if ('parent_source_title_vector' %in% vector_fields_to_search) { 
+    parent_sim = "def parentsim = doc['parent_source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'parent_source_title_vector') + 1; " 
+  }
+
+  title_sim = "def titlesim = 0; "
+  if ('source_title_vector' %in% vector_fields_to_search) { 
+    title_sim = "def titlesim = doc['source_title_vector'].size() == 0 ? 0 : cosineSimilarity(params.queryVector, 'source_title_vector') + 1; " 
+  }
+
+  # Get the max of the similarity to each field:
+  script_block = paste0(text_sim, 
+                        parent_sim, 
+                        title_sim,
+                        "def currscore = Math.max(titlesim, textsim); ",
+                        "Math.max(currscore, parentsim);")
   glue::glue('
     "min_score": <{min_score}>,
     "query": {
@@ -189,15 +221,12 @@ embedding_search_body <- function(query,
             "filter": [
               {
                 <{filter_str}>
-              },
-              {
-                "exists": { "field": "<{vector_field}>" }
               }
             ]
           }
         },
         "script": {
-          "source": "cosineSimilarity(params.queryVector, \'<{vector_field}>\') + 1.0",
+          "source": "<{script_block}>",
           "params": {"queryVector": <{vector_str}>}
         }
       }
@@ -349,13 +378,19 @@ get_embedding_vector <- function(query,
                                  api_url, 
                                  api_user, 
                                  api_password,
-                                 api_version = "v1") {
+                                 api_version) {
   query = URLencode(query)
-  res = api_url %>%
+  response = api_url %>%
     paste0("/embeddings_api/", api_version, "/embed_query?query=", query) %>%
-    httr::GET(authenticate(api_user, api_password)) %>%
-    httr::content()
-  unlist(res$embedding_vector)
+    httr::GET(authenticate(api_user, api_password)) 
+    
+  if (response$status != 200) { 
+    stop(paste0("ERROR From API at ", api_url, " with user ", api_user, " in get_embedding_vector(): ", as.character(response))) 
+  }
+
+  content = httr::content(response)
+
+  unlist(content$embedding_vector)  
 }
 
 parse_hits <- function(es_results, index_to_db_map) {
