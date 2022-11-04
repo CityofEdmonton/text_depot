@@ -96,8 +96,7 @@ index_to_alias_mapping <- function(es, alias_names) {
   mapping = elastic::aliases_get(es, index = alias_names)
 
   mapping_df = tibble::enframe(mapping, name = "index_name") %>%
-    tidyr::unnest_wider(value) %>%
-    filter(str_detect(index_name, "coe_td_"))
+    tidyr::unnest_wider(value)
 
   if (!all(is.na(mapping_df$aliases))) { 
     mapping_df = mapping_df %>%
