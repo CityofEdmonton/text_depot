@@ -48,7 +48,7 @@ mapPlotUI <- function(id, selected){
 }
 
 mapPlot <- function(input, output, session,
-                            query_info, selected) {
+                    query_info, selected) {
   
   neighbourhoods = sf::st_read(get_configs()$neighbourhoods_file, quiet = TRUE)
   
@@ -79,6 +79,8 @@ mapPlot <- function(input, output, session,
                                     aggregates_json = sentimentNeighbourhoodsQuery())
     aggregations = parse_aggregates(es_results = aggregations)
     
+    req(nrow(aggregations$hoods.names.buckets) > 0)
+
     hood_stats = aggregations$hoods.names.buckets %>%
       group_by(key) %>%
       summarize(
