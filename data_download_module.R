@@ -1,18 +1,27 @@
 dataDownloadUI <- function(id){
   ns <- NS(id)
 
+  message = "
+    Click the button below to download your search results. After
+    clicking the button, your search results will be
+    gathered and prepared for download. You can continue using
+    the application during this process, and you will be notified
+    when your download is ready.
+  "
+
+  max_results = get_configs()$max_downloadable_results
+  if (!is.null(max_results)) {
+    message = HTML(sprintf("
+      %s
+      <BR /><BR />
+      Note: Download limit is %d documents. If your search resulted in more documents, only the 
+      first %d best matching documents will be downloaded.
+    ", message, max_results, max_results))
+  }
+
   tagList(
     fluidRow(
-      column(
-        "
-        Click the button below to download your search results. After
-        clicking the button, your search results will be
-        gathered and prepared for download. You can continue using
-        the application during this process, and you will be notified
-        when your download is ready.
-        ",
-        width = 6
-      )
+      column(message, width = 6)
     ),
     br(), br(),
     actionButton(ns("download_search_data"), label = "Prepare Download"),
@@ -67,6 +76,11 @@ dataDownload <- function(input, output, session,
                  text) %>%
           mutate(text = gsub("^((\\w+\\W+){100}\\w+).*$","\\1",text))
       } else {
+        # When not set, this will return NULL, which corresponds to no limit in the elastic::Search function:
+        num_results = ifelse(is.null(get_configs()$max_downloadable_results), 
+                             query_info$num_hits, 
+                             get_configs()$max_downloadable_results)
+
         data_return = query_text_depot(query_info,
                                        source_json = source_body(c("id",
                                                                    "num_chars",
@@ -82,7 +96,7 @@ dataDownload <- function(input, output, session,
                                                                            "source_title",
                                                                            "parent_source_title")),
                                        from = 0,
-                                       size = 10000) %>%
+                                       size = num_results) %>%
           parse_hits(data_set_info) %>%
           group_by(`id`) %>%
           mutate(highlights = collapse_highlights(highlight.source_title,

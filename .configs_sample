@@ -22,3 +22,7 @@ default_index_aliases: ['es_alias_1','es_alias_2','es_index_1']
 results_per_page: 30
 n_char_no_match: 100
 n_char_highlights: 100
+
+# Maximum number of results that can be downloaded by users. 
+# Leave blank to disable.
+max_downloadable_results: 5000

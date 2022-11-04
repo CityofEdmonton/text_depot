@@ -34,4 +34,4 @@ RESULTS_PER_PAGE = as.numeric(get_configs()$results_per_page)
 N_CHAR_NO_MATCH = as.numeric(get_configs()$n_char_no_match)
 N_CHAR_HIGHLIGHTS = as.numeric(get_configs()$n_char_highlights)
 
-add_health_check(config)
+add_health_check()
