@@ -775,7 +775,7 @@ sentiment_legend <- function() {
   )
 }
 
-do_health_check <- function(config) {
+do_health_check <- function() {
   status = "healthy"
   info = ""
 
@@ -795,9 +795,9 @@ do_health_check <- function(config) {
 }
 
 # Adds health check API endpoint
-add_health_check <- function(config, route = "/__health-check__") {
+add_health_check <- function(route = "/__health-check__") {
   httpHandler = function(req) {
-    info = do_health_check(config)
+    info = do_health_check()
 
     return(list(status = 200L,
                 headers = list('Content-Type' = 'application/json'),
