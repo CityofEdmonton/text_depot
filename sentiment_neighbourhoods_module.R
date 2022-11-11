@@ -48,7 +48,7 @@ mapPlotUI <- function(id, selected){
 }
 
 mapPlot <- function(input, output, session,
-                            query_info, selected) {
+                    query_info, selected) {
   
   neighbourhoods = sf::st_read(get_configs()$neighbourhoods_file, quiet = TRUE)
   
@@ -78,104 +78,109 @@ mapPlot <- function(input, output, session,
     aggregations = query_text_depot(query_info = query_info(),
                                     aggregates_json = sentimentNeighbourhoodsQuery())
     aggregations = parse_aggregates(es_results = aggregations)
-    
-    hood_stats = aggregations$hoods.names.buckets %>%
-      group_by(key) %>%
-      summarize(
-        doc_count = sum(doc_count),
-        avg_sentiment = mean(neighbourhood_to_sentiment.avg_sentiment.value),
-        .groups = "drop"
-      ) %>%
-      rename(name = key) %>%
-      mutate(label1 = paste0(name, "<br/>", "Doc Count: ", doc_count, "<br/>",
-                           "Sentiment: ", round(avg_sentiment, 2))) %>%
-      mutate(label2 = paste0(name, "<br/>", "Doc Count: ", doc_count))
-    
-    hoods_df = neighbourhoods %>%
-      left_join(hood_stats, by = c("descriptive_name" = "name"))
-    na_ind = which(is.na(hoods_df$avg_sentiment))
-    hoods_df$doc_count[na_ind] = 0
-    hoods_df$label1[na_ind] = paste0(hoods_df$name[na_ind], ": ", NA)
-    hoods_df$label2[na_ind] = paste0(hoods_df$name[na_ind], ": ", NA)
-    
-    if (length(input$neighbourhoods_exclude) > 0) {
-      hoods_df = dplyr::filter(hoods_df, !(descriptive_name %in% input$neighbourhoods_exclude))
-    }
-    
+          
     bbox = sf::st_bbox(neighbourhoods)
     min.lat = as.numeric(bbox$ymin)
     max.lat = as.numeric(bbox$ymax)
     min.lng = as.numeric(bbox$xmin)
     max.lng = as.numeric(bbox$xmax)
-    pal = colorNumeric(palette = "Blues", domain = hoods_df$doc_count, reverse = FALSE)
-    
-    colours = get_sentiment_colourmap()
-    
-    hoods_df$label = ifelse(!is.na(hoods_df$avg_sentiment),
-                             as.character(cut(hoods_df$avg_sentiment, 
-                                             breaks = c(colour_map$lower, Inf), 
-                                             labels = colour_map$label, 
-                                             include.lowest = TRUE, 
-                                             right = TRUE)),
-                            NA)
-    hoods_df = dplyr::left_join(hoods_df, colours, by = c("label" = "label"))
-    
-    if (selected == "Sentiment") {
-      m = leaflet() %>%
-        addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
-        fitBounds(min.lng, min.lat, max.lng, max.lat) %>%
-        addPolygons(
-          data = hoods_df,
-          # fillColor = ~pal(sentiment_mean),
-          fillColor = ~colour,
-          weight = 2,
-          opacity = 1,
-          color = "white",
-          dashArray = "3",
-          fillOpacity = 0.7,
-          highlight = highlightOptions(
-            weight = 3,
-            color = "#666666",
-            dashArray = "",
+    map = leaflet() %>%
+      addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
+      fitBounds(min.lng, min.lat, max.lng, max.lat)
+
+    if (nrow(aggregations$hoods.names.buckets) > 0) {
+      hood_stats = aggregations$hoods.names.buckets %>%
+        group_by(key) %>%
+        summarize(
+          doc_count = sum(doc_count),
+          avg_sentiment = mean(neighbourhood_to_sentiment.avg_sentiment.value),
+          .groups = "drop"
+        ) %>%
+        rename(name = key) %>%
+        mutate(label1 = paste0(name, "<br/>", "Doc Count: ", doc_count, "<br/>",
+                            "Sentiment: ", round(avg_sentiment, 2))) %>%
+        mutate(label2 = paste0(name, "<br/>", "Doc Count: ", doc_count))
+      
+      hoods_df = neighbourhoods %>%
+        left_join(hood_stats, by = c("descriptive_name" = "name"))
+      na_ind = which(is.na(hoods_df$avg_sentiment))
+      hoods_df$doc_count[na_ind] = 0
+      hoods_df$label1[na_ind] = paste0(hoods_df$name[na_ind], ": ", NA)
+      hoods_df$label2[na_ind] = paste0(hoods_df$name[na_ind], ": ", NA)
+      
+      if (length(input$neighbourhoods_exclude) > 0) {
+        hoods_df = dplyr::filter(hoods_df, !(descriptive_name %in% input$neighbourhoods_exclude))
+      }
+
+      pal = colorNumeric(palette = "Blues", domain = hoods_df$doc_count, reverse = FALSE)
+      
+      colours = get_sentiment_colourmap()
+      
+      hoods_df$label = ifelse(!is.na(hoods_df$avg_sentiment),
+                              as.character(cut(hoods_df$avg_sentiment, 
+                                              breaks = c(colour_map$lower, Inf), 
+                                              labels = colour_map$label, 
+                                              include.lowest = TRUE, 
+                                              right = TRUE)),
+                              NA)
+      hoods_df = dplyr::left_join(hoods_df, colours, by = c("label" = "label"))
+      
+      if (selected == "Sentiment") {
+        map = map %>% 
+          addPolygons(
+            data = hoods_df,
+            # fillColor = ~pal(sentiment_mean),
+            fillColor = ~colour,
+            weight = 2,
+            opacity = 1,
+            color = "white",
+            dashArray = "3",
             fillOpacity = 0.7,
-            bringToFront = TRUE
-          ),
-          label = ~lapply(label1, htmltools::HTML),
-          labelOptions = labelOptions(
-            style = list("font-weight" = "normal", padding = "3px 8px"),
-            textsize = "15px",
-            direction = "auto"
+            highlight = highlightOptions(
+              weight = 3,
+              color = "#666666",
+              dashArray = "",
+              fillOpacity = 0.7,
+              bringToFront = TRUE
+            ),
+            label = ~lapply(label1, htmltools::HTML),
+            labelOptions = labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "15px",
+              direction = "auto"
+            )
           )
-        )
-    } else if (selected == "Count") {
-      m = leaflet() %>%
-        addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
-        fitBounds(min.lng, min.lat, max.lng, max.lat) %>%
-        addPolygons(
-          data = hoods_df,
-          fillColor = ~pal(doc_count),
-          weight = 2,
-          opacity = 1,
-          color = "white",
-          dashArray = "3",
-          fillOpacity = 0.7,
-          highlight = highlightOptions(
-            weight = 3,
-            color = "#666666",
-            dashArray = "",
+      } else if (selected == "Count") {
+        map = map %>%
+          addPolygons(
+            data = hoods_df,
+            fillColor = ~pal(doc_count),
+            weight = 2,
+            opacity = 1,
+            color = "white",
+            dashArray = "3",
             fillOpacity = 0.7,
-            bringToFront = TRUE
-          ),
-          label = ~lapply(label2, htmltools::HTML),
-          labelOptions = labelOptions(
-            style = list("font-weight" = "normal", padding = "3px 8px"),
-            textsize = "15px",
-            direction = "auto"
+            highlight = highlightOptions(
+              weight = 3,
+              color = "#666666",
+              dashArray = "",
+              fillOpacity = 0.7,
+              bringToFront = TRUE
+            ),
+            label = ~lapply(label2, htmltools::HTML),
+            labelOptions = labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "15px",
+              direction = "auto"
+            )
           )
-        )
+      }
+    } else { # No neighbourhood data to plot, so just show an info message:
+      map = map %>% 
+        addControl("<span style='font-weight: bold; color: red'>No Neighbourhoods were mentioned in your search results!</span>", position = "topleft", className = "info legend")
     }
-    
-    return(m)
+
+    map
   })
   
   output$map_plot_output <- leaflet::renderLeaflet({

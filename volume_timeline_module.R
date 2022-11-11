@@ -35,7 +35,7 @@ volumeTimeline <- function(input, output, session,
     req(query_info()$num_hits > 0)
 
     aggregations <- query_text_depot(query_info = query_info(),
-                                    aggregates_json = volumeTimelineQuery())
+                                     aggregates_json = volumeTimelineQuery())
     aggregations = parse_aggregates(es_results = aggregations)
 
     plot_hits <- aggregations$month_counts.buckets %>%
@@ -51,6 +51,7 @@ volumeTimeline <- function(input, output, session,
     # This means that for histogram aggregation, it never returns bins before the
     # first, or after the last non-zero value
     all_months <- data_set_info() %>%
+      filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
       group_by(display_name) %>%
       transmute(Date = list( seq(lubridate::floor_date(date_range_min, unit = "month"),
                                  lubridate::ceiling_date(date_range_max, unit = "month"),
