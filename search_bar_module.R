@@ -28,6 +28,12 @@ searchBarUI <- function(id){
                                                                   no = icon("remove", lib = "glyphicon"))),
               uiOutput(ns("date_range_ui"), style = "padding-left: 10px"),
               uiOutput(ns("sentiment_range_ui")),
+              shinyWidgets::radioGroupButtons(ns("sort_by"),
+                                              label = "Sort Results By",
+                                              choices = c("Search Score" = "score", 
+                                                          "Date (Oldest First)" = "date_asc", 
+                                                          "Date (Newest First)" = "date_desc"),
+                                              status = "success"), # selected = 
               uiOutput(ns("data_source_ui")),
 
               # Only turn on AI search if we've specified an API Host:
@@ -127,7 +133,6 @@ searchBar <- function(input, output, session,
       start = min,
       end = max)
   })
-
   
   sentiment_stats <- reactive({
     stats_for_field(es_connection, data_set_info()$alias_name, "sentiment_polarity",numeric = TRUE)
@@ -227,6 +232,7 @@ searchBar <- function(input, output, session,
          max_date = selected_date_range()[2],
          min_sentiment = selected_sentiment_range()[1],
          max_sentiment = selected_sentiment_range()[2],
+         sort_by = input$sort_by,
          num_hits = sum(aggregations()$counts_by_index$doc_count),
          use_embeddings = use_embeddings_setting())
   })
