@@ -33,7 +33,8 @@ searchBarUI <- function(id){
                                               choices = c("Search Score" = "score", 
                                                           "Date (Oldest First)" = "date_asc", 
                                                           "Date (Newest First)" = "date_desc"),
-                                              status = "success"), # selected = 
+                                              status = "success",
+                                              selected = "score"),
               uiOutput(ns("data_source_ui")),
 
               # Only turn on AI search if we've specified an API Host:
