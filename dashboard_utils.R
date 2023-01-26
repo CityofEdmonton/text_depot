@@ -372,7 +372,6 @@ query_text_depot <- function(query_info = NULL,
                              from = from,
                              size = size
   )
-  print(paste("@@@@@@@",results))
 
   if (results$`_shards`$failed > 0) { return(paste0("Error! Shard Failed! ", paste(results$`_shards`$failures, collapse = "; "))) }
 
