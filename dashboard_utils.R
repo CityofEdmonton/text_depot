@@ -354,8 +354,8 @@ query_text_depot <- function(query_info = NULL,
 
   if (is.null(sort_by)) { sort_by = "score" }
   sort_json = case_when(sort_by == "score" ~ '"sort": [ "_score" ]',
-                        sort_by == "date_asc" ~ '"sort": [ {"date": "asc"} ]',
-                        sort_by == "date_desc" ~ '"sort": [ {"date": "desc"} ]',
+                        sort_by == "date_asc" ~ '"sort": [ {"date":{"order":"asc"}} ,{"_score":{"order":"desc"}}]',
+                        sort_by == "date_desc" ~ '"sort": [ {"date": {"order":"desc"}},{"_score":{"order":"desc"}} ]',
                         TRUE ~ '"sort": [ "_score" ]')
 
   # if part of query is not defined, it will be default NULL value, and that is elegantly handled by combine_query:
@@ -372,6 +372,7 @@ query_text_depot <- function(query_info = NULL,
                              from = from,
                              size = size
   )
+  print(paste("@@@@@@@",results))
 
   if (results$`_shards`$failed > 0) { return(paste0("Error! Shard Failed! ", paste(results$`_shards`$failures, collapse = "; "))) }
 
