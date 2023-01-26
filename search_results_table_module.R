@@ -142,8 +142,7 @@ searchResultsTable <- function(input, output, session,
     req(hits)
     req(nrow(hits) > 0)
 
-    hits %>%
-      arrange(desc(similarity))
+    hits
   })
 
   output$column_picker <- renderUI({
