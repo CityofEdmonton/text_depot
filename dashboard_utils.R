@@ -159,29 +159,27 @@ search_body <- function(query,
     # min_score = 0.55 # This suggests using at least 0.5 for Doc2Vec: https://radimrehurek.com/gensim/auto_examples/howtos/run_doc2vec_imdb.html
     min_score = 0.35 # FastText needs a lower min_score
     vector_fields = paste0(search_fields, "_vector")
-    embedding_search_body(query, 
-                          fields_str, 
+    embedding_search_body(query,
+                          vector_fields, 
                           filter_str, 
                           min_score, 
                           get_configs()$embedding_api_host, 
                           get_configs()$embedding_api_user, 
                           get_configs()$embedding_api_password, 
-                          get_configs()$embedding_api_version,
-                          vector_fields)
+                          get_configs()$embedding_api_version)
   } else {
     standard_search_body(query, fields_str, filter_str, min_score)
   }
 }
 
 embedding_search_body <- function(query,
-                                  fields_str,
+                                  vector_fields_to_search,
                                   filter_str,
                                   min_score,
                                   api_url,
                                   api_user,
                                   api_password,
-                                  api_version,
-                                  vector_fields_to_search) {
+                                  api_version) {
   vector = get_embedding_vector(query, api_url, api_user, api_password, api_version)
 
   vector_str = paste0("[", paste0(vector, collapse = ", "), "]")
@@ -341,6 +339,7 @@ query_text_depot <- function(query_info = NULL,
   max_date = query_info$max_date
   min_sentiment = query_info$min_sentiment
   max_sentiment = query_info$max_sentiment
+  sort_by = query_info$sort_by
   use_embeddings = query_info$use_embeddings
   query_search <- search_body(
     query = query_str,
@@ -353,12 +352,18 @@ query_text_depot <- function(query_info = NULL,
     use_embedding_search = use_embeddings
   )
 
+  if (is.null(sort_by)) { sort_by = "score" }
+  sort_json = case_when(sort_by == "score" ~ '"sort": [ "_score" ]',
+                        sort_by == "date_asc" ~ '"sort": [ {"date":{"order":"asc"}} ,{"_score":{"order":"desc"}}]',
+                        sort_by == "date_desc" ~ '"sort": [ {"date": {"order":"desc"}},{"_score":{"order":"desc"}} ]',
+                        TRUE ~ '"sort": [ "_score" ]')
+
   # if part of query is not defined, it will be default NULL value, and that is elegantly handled by combine_query:
   query <- combine_query(query_search,
                          aggregates_json,
                          source_json,
-                         highlights_json
-  )
+                         highlights_json,
+                         sort_json)
 
   results <- elastic::Search(conn = conn,
                              index = index,
