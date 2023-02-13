@@ -12,10 +12,8 @@ searchBarUI <- function(id){
           column(
             # Cant use "dropdownButton" because of https://github.com/dreamRs/shinyWidgets/issues/38
             shinyWidgets::dropdown(
-              a("Click here for documentation on Advanced Queries",
-                href = 'https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#simple-query-string-syntax',
-                target = "_blank",
-                style = "color: blue; font-weight: bold"),
+              # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#simple-query-string-syntax',
+              actionLink(ns("advanced_query_info"), label = "Click here for documentation on Advanced Queries", style = "color: blue; font-weight: bold"),
 
               br(), br(),
 
@@ -84,6 +82,68 @@ searchBar <- function(input, output, session,
                               btnSearch = icon("search"),
                               btnReset = icon("times"),
                               width = "100%")
+  })
+
+  observeEvent(input$advanced_query_info, {
+    modalDialog(
+      title = "Text Depot - Advanced Queries",
+      size = "l",
+        '
+        Text Depot provides basic keyword search (enter the words you are interested 
+        in), but also provides a way to put together advanced queries using several 
+        logical operators that you can use in your searches:
+        ',
+        br(),
+        br(),
+      fluidRow(
+        column(strong("+ (plus sign)"), width = 3), 
+        column("Indicates that the term following it must be present in the search results.", width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("- (minus sign)"), width = 3), 
+        column("Indicates that the term following it must be absent from the search results.", width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong('" " (quotation marks)'), width = 3), 
+        column("Search for an exact phrase. Results will only include documents that contain the exact phrase.", width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("* (asterisk)"), width = 3), 
+        column('Multiple character wildcard. For example, a search for "bus*" would match both "buses" and "business".', width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("? (question mark)"), width = 3), 
+        column('Wildcard, but it matches only one character. For example, a search for "te?t" would match "test" and "text" but not "tenant".', width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("~ (tilde)"), width = 3), 
+        column("Fuzzy matching. It will match documents that are similar to the search term, with a specified level of tolerance for differences, in the format [term]~[edit distance]. For example, a search for test~1 would match test, text, best, and other words that are an edit-distance of 1 away from your query. This is useful when including mis-spellings.", width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("AND"), width = 3), 
+        column('Returns documents that match all of the search terms. Example: "dog AND cat" returns documents containing both "dog" and "cat".', width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("OR"), width = 3), 
+        column('Returns documents that match at least one of the search terms. Example: "dog OR cat" returns documents containing either "dog" or "cat" or both.', width = 6)
+      ), 
+      br(),
+      fluidRow(
+        column(strong("NOT"), width = 3), 
+        column('Excludes documents that match the search term. Example: "dog NOT cat" returns documents containing "dog" but not "cat".', width = 6)        
+      ),
+      br(),
+      'Note that you can combine the above operators, and group them with parenthesis (). For example: "safety AND (bus OR train) -budget".',
+      easyClose = TRUE
+    ) %>%
+      showModal()
   })
 
   # Set the focus on the search bar, once input is loaded
