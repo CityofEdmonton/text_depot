@@ -9,8 +9,15 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   xdg-utils \
   && rm -rf /var/lib/apt/lists/*
 
+
 # Freezing packages:
-RUN echo "options(repos = c(REPO_NAME = 'https://mran.microsoft.com/snapshot/2022-04-22'))" >> $R_HOME/etc/Rprofile.site
+ARG TARGETPLATFORM
+RUN case ${TARGETPLATFORM} in \
+  "linux/amd64") \
+  echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/__linux__/jammy/2022-04-22'))" >> $R_HOME/etc/Rprofile.site ;; \
+  "linux/arm64") \
+  echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/2022-04-22'))" >> $R_HOME/etc/Rprofile.site ;; \
+esac
 
 RUN R -e "options(warn = 2); install.packages(c('assertthat', \
   'data.table', \
