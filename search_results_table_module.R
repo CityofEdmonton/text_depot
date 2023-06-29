@@ -225,10 +225,10 @@ searchResultsTable <- function(input, output, session,
 
     display_text = doc$text %>%
       gsub("\n\\s*\n\\s*\n\\s*", "\n\n\n" ,.) %>% # Replace 3+ newlines with just 3 newlines
-      str_replace_all("\t", "&nbsp;&nbsp;&nbsp;&nbsp;") %>%
-      str_replace_all(" ", "&nbsp;") %>%
-      str_replace_all("\n", "<br />") %>%
-      HTML()
+      str_replace_all("\t", "    ")
+      # str_replace_all(" ", "&nbsp;") %>%
+      # str_replace_all("\n", "<br />") %>%
+      # HTML()
 
     # shinyWidgets::sendSweetAlert(
     shinyWidgets::confirmSweetAlert(
@@ -251,77 +251,44 @@ searchResultsTable <- function(input, output, session,
           strong("Detected Neighbourhoods:"), neighbourhoods, br(),
           br(),
           strong(sprintf("Full Document Text (%s Characters, %s Sentences)", row$num_chars, row$num_sentences)),
-          div(
-            style = "
-              margin: auto;
-              text-align: left;
-              font-size: 14px;
-              background-color: #f0f0f0;
-              overflow: scroll;
-              height: 300px;
-              width: 90%;
-              border: 4px double #e8cdc3;
-            ",
-            display_text
-          )
+          br(),
+          tags$textarea(id="foo", rows = 16, style = "width: 90%; resize:vertical", readonly = TRUE, display_text)
         ),
         # Only turn on summaries if we've specified an API Host,
         # and this is a long piece of text:
-
-        # ifelse(!is.null(get_configs()$embedding_api_host) & (row$num_chars > 1000),
+        # TODO: Remove multiple spaces
         if (!is.null(get_configs()$embedding_api_host) & (row$num_chars > 1000)) {
           actionButton(session$ns("summary_button"), "Summarize Text")
         } else {
           ""
         },
-        # actionButton(session$ns("summary_button"), "Summarize Text"),
         uiOutput(session$ns("summary_section")), # %>% shinycssloaders::withSpinner()
-
-
-        # conditionalPanel(
-        #   condition = "input.search_results_table-summary_button",
-        #   "BLAHBLAH"
-        # )
-
-
-        # actionButton("summary_button", "Push Me!"),
-        # shinyBS::bsCollapse(id = "collapseExample", open = "Panel 1",
-        #           shinyBS::bsCollapsePanel("Panel 1", "This is a panel with just text ",
-        #            "and has the default style. You can change the style in ",
-        #            "the sidebar.", style = "info"))
       ),
       width = 1000,
       html = TRUE
     )
 
     observeEvent(input$doc_info, {
-      print("CLOSED DIALOG!")
-      output$summary_section = renderText({""})#NULL
-      # shinyjs::show("summary_button")
-      # shinyjs::hide("summary_section")
+      # TODO: Needed?
+      output$summary_section = renderText({""})
     })
 
     output$summary_section = renderText({""})#NULL
 
-    observe({
+    observeEvent(input$summary_button, {
       req(input$summary_button)
-      if (input$summary_button == 0)
-        return()
+      req(input$summary_button != 0)
       isolate({
-        print("BUTTON PUSHED")
-        print(input$summary_button)
-        shinycssloaders::showPageSpinner()
+        shinycssloaders::showPageSpinner(caption = "🤖 Processing... 🤖")
+        shinyjs::hide("summary_button")
         # shinyjs::show("summary_section")
         configs = get_configs()
-        summary = substr(doc$text, 1, 10)
-        # summary = get_document_summary(doc$text, 
-        #                               configs$embedding_api_host,
-        #                               configs$embedding_api_user,
-        #                               configs$embedding_api_password,
-        #                               configs$embedding_api_version)
-        # print(summary)
+        summary = get_document_summary(doc$text, 
+                                      configs$embedding_api_host,
+                                      configs$embedding_api_user,
+                                      configs$embedding_api_password,
+                                      configs$embedding_api_version)
         output$summary_section = renderUI({
-          print("RENDERING SUMMARY")
           tagList(
             strong("AI-generated Text Summary"),
             br(),
@@ -329,37 +296,8 @@ searchResultsTable <- function(input, output, session,
           )
         })
         shinycssloaders::hidePageSpinner()
-        print("DONE BUTTON PUSH")
       })
-    })
-
-    # observeEvent(input$summary_button, {
-    #   shinycssloaders::showPageSpinner()
-    #   shinyjs::show("summary_section")
-    #   configs = get_configs()
-    #   print("BUTTON PUSHED")
-    #   summary = "Summary Here"
-    #   summary = get_document_summary(doc$text, 
-    #                                  configs$embedding_api_host,
-    #                                  configs$embedding_api_user,
-    #                                  configs$embedding_api_password,
-    #                                  configs$embedding_api_version)
-    #   print(summary)
-    #   output$summary_section = renderUI({
-    #     print("IN RENDER")
-    #     tagList(
-    #       strong("AI-generated Text Summary"),
-    #       br(),
-    #       summary
-    #     )
-    #   })
-    #   shinycssloaders::hidePageSpinner()
-    #   print("DONE HERE")
-    # })
-
-  #   observeEvent(input$summary_button, ({
-  #    shinyBS::updateCollapse(session, "collapseExample", open = "Panel 1")
-  #  }))
+    }, ignoreInit = TRUE, once = TRUE)
   })
 
 }
