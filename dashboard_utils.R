@@ -100,7 +100,7 @@ index_to_alias_mapping <- function(es, alias_names) {
 
   if (!all(is.na(mapping_df$aliases))) { 
     mapping_df = mapping_df %>%
-      tidyr::unnest_longer(aliases, indices_to = "alias_name") %>%
+      tidyr::unnest_longer(aliases, indices_to = "alias_name", keep_empty = TRUE) %>%
       select(-aliases) %>%
       mutate(alias_name = dplyr::coalesce(alias_name, index_name)) # use index name if alias name not present
   } else {
@@ -108,6 +108,7 @@ index_to_alias_mapping <- function(es, alias_names) {
     mapping_df$alias_name = mapping_df$index_name
   }
 
+  # browser()
   assertthat::assert_that(all(alias_names %in% union(mapping_df$alias_name, mapping_df$index_name)), msg = "some requested aliases/indices are not in Elastic Search")
 
   mapping_df <- mapping_df %>%
@@ -376,6 +377,25 @@ query_text_depot <- function(query_info = NULL,
   if (results$`_shards`$failed > 0) { return(paste0("Error! Shard Failed! ", paste(results$`_shards`$failures, collapse = "; "))) }
 
   results
+}
+
+get_document_summary <- function(query,
+                                 api_url,
+                                 api_user,
+                                 api_password,
+                                 api_version) {
+  # cleaned_query = URLencode(query)
+  body = list(query = query)
+  response = api_url %>%
+    paste0("/embeddings_api/", api_version, "/summarize") %>%
+    httr::POST(authenticate(api_user, api_password), body = body, encode = "json") 
+    
+  if (response$status != 200) { 
+    stop(paste0("ERROR From API at ", api_url, " with user ", api_user, " in get_embedding_vector(): ", as.character(response))) 
+  }
+
+  content = httr::content(response)
+  content$summary
 }
 
 get_embedding_vector <- function(query, 
