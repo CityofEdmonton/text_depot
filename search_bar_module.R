@@ -55,14 +55,14 @@ searchBarUI <- function(id){
             ),
             width = 3
           ),
-          style = "
-            background-color: #D3EDF0;
+          style = sprintf("
+            background-color: %s;
             margin: 0 0 0 0;
             padding: 20px 0 5px 0;
             border-radius: 10px;
             vertical-align = center;
             min-height: 75px; // Should be 50 + padding
-          "
+          ", main_div_background())
         ),
         width = 6
       )

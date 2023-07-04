@@ -240,7 +240,7 @@ searchResultsTable <- function(input, output, session,
         strong(sprintf('Query: "%s"', query_info()$query),
                style = "font-size: 14px; padding: 5px"),
         div(
-          style = "background-color: #D3EDF0; border-radius: 10px; padding: 5px; margin: 10px; font-size: 14px",
+          style = sprintf("background-color: %s; border-radius: 10px; padding: 5px; margin: 10px; font-size: 14px", main_div_background()),
           tags$u(format_title(row$parent_source_title, row$parent_source_url, add_link = TRUE), style = "font-size: 16px;"), br(),
           span(format_title(row$source_title, row$source_url, add_link = TRUE), style = "font-size: 16px;"), br(),
           br(),
@@ -256,12 +256,14 @@ searchResultsTable <- function(input, output, session,
         # Only turn on summaries if we've specified an API Host,
         # and this is a long piece of text:
         if (!is.null(get_configs()$embedding_api_host) & (row$num_chars > 1000)) {
-          # TODO: Nicer button
-          actionButton(session$ns("summary_button"), "Summarize Text")
+          actionButton(session$ns("summary_button"), 
+                       "Summarize Text", 
+                       icon("robot"), 
+                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
         } else {
           ""
         },
-        uiOutput(session$ns("summary_section")), # %>% shinycssloaders::withSpinner()
+        uiOutput(session$ns("summary_section")),
       ),
       width = 1000,
       html = TRUE
@@ -281,14 +283,15 @@ searchResultsTable <- function(input, output, session,
         shinycssloaders::showPageSpinner(caption = "🤖 Reading Text... 🤖")
         shinyjs::hide("summary_button")
         configs = get_configs()
-        summary = get_document_summary(display_text, 
-                                       configs$embedding_api_host,
-                                       configs$embedding_api_user,
-                                       configs$embedding_api_password,
-                                       configs$embedding_api_version)
-        # TODO: Clean up this output
+        summary = "lsdkfjlsdkjg lsdkjg lsdkjf lkjsdl fkjsdlk fjsldkj flksdj flksjd lfkjsdl fkjsldk jflskdj flskdjf lskdjf lskdjf lskdjf lksjdf lksdj flj"
+        # summary = get_document_summary(display_text, 
+        #                                configs$embedding_api_host,
+        #                                configs$embedding_api_user,
+        #                                configs$embedding_api_password,
+        #                                configs$embedding_api_version)
         output$summary_section = renderUI({
-          tagList(
+          div(
+            style = sprintf("width: 90%%; margin: auto; background-color: %s; border-radius: 10px; padding: 5px; font-size: 14px", secondary_div_background()),
             strong("AI-generated Text Summary"),
             br(),
             summary
