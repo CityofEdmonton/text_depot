@@ -230,8 +230,7 @@ searchResultsTable <- function(input, output, session,
       # str_replace_all("\n", "<br />") %>%
       # HTML()
 
-    # shinyWidgets::sendSweetAlert(
-    shinyWidgets::confirmSweetAlert(
+    shinyWidgets::confirmSweetAlert( # confirmSweetAlert allows us to track when the "OK" button is clicked
       session = session,
       inputId = session$ns("doc_info"),
       title = "Matching Document Information",
@@ -256,8 +255,8 @@ searchResultsTable <- function(input, output, session,
         ),
         # Only turn on summaries if we've specified an API Host,
         # and this is a long piece of text:
-        # TODO: Remove multiple spaces
         if (!is.null(get_configs()$embedding_api_host) & (row$num_chars > 1000)) {
+          # TODO: Nicer button
           actionButton(session$ns("summary_button"), "Summarize Text")
         } else {
           ""
@@ -269,7 +268,6 @@ searchResultsTable <- function(input, output, session,
     )
 
     observeEvent(input$doc_info, {
-      # TODO: Needed?
       output$summary_section = renderText({""})
     })
 
@@ -278,16 +276,17 @@ searchResultsTable <- function(input, output, session,
     observeEvent(input$summary_button, {
       req(input$summary_button)
       req(input$summary_button != 0)
+      # TODO: Do we need isolate? https://github.com/rstudio/shiny/issues/167
       isolate({
-        shinycssloaders::showPageSpinner(caption = "🤖 Processing... 🤖")
+        shinycssloaders::showPageSpinner(caption = "🤖 Reading Text... 🤖")
         shinyjs::hide("summary_button")
-        # shinyjs::show("summary_section")
         configs = get_configs()
-        summary = get_document_summary(doc$text, 
-                                      configs$embedding_api_host,
-                                      configs$embedding_api_user,
-                                      configs$embedding_api_password,
-                                      configs$embedding_api_version)
+        summary = get_document_summary(display_text, 
+                                       configs$embedding_api_host,
+                                       configs$embedding_api_user,
+                                       configs$embedding_api_password,
+                                       configs$embedding_api_version)
+        # TODO: Clean up this output
         output$summary_section = renderUI({
           tagList(
             strong("AI-generated Text Summary"),
@@ -297,7 +296,7 @@ searchResultsTable <- function(input, output, session,
         })
         shinycssloaders::hidePageSpinner()
       })
-    }, ignoreInit = TRUE, once = TRUE)
+    }, ignoreInit = TRUE, once = TRUE) # https://community.rstudio.com/t/issue-with-r-shiny-modal-dialog-and-observe-event-on-action-button/9501
   })
 
 }
