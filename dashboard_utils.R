@@ -100,7 +100,7 @@ index_to_alias_mapping <- function(es, alias_names) {
 
   if (!all(is.na(mapping_df$aliases))) { 
     mapping_df = mapping_df %>%
-      tidyr::unnest_longer(aliases, indices_to = "alias_name", keep_empty = TRUE) %>%
+      tidyr::unnest_longer(aliases, indices_to = "alias_name") %>%
       select(-aliases) %>%
       mutate(alias_name = dplyr::coalesce(alias_name, index_name)) # use index name if alias name not present
   } else {
@@ -108,7 +108,6 @@ index_to_alias_mapping <- function(es, alias_names) {
     mapping_df$alias_name = mapping_df$index_name
   }
 
-  # browser()
   assertthat::assert_that(all(alias_names %in% union(mapping_df$alias_name, mapping_df$index_name)), msg = "some requested aliases/indices are not in Elastic Search")
 
   mapping_df <- mapping_df %>%
