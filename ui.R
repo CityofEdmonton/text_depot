@@ -16,15 +16,15 @@ ui <- fluidPage(
     column(
       a(img(src = "text_depot_icon/TextDepotIcon_Image_S.jpg", width = 105, style = "float: left; padding: 10px 10px 0 0"),
         href = "https://github.com/CityofEdmonton/text_depot"),
-      span("TEXT DEPOT", style = 'font-weight: 700;
-                                  font-size: 35px;
-                                  font-family: "Open Sans";
-                                  margin: 20px 0 20px 0;
-                                  color: #32566F'),
+      span("TEXT DEPOT", style = sprintf('font-weight: 700;
+                                         font-size: 35px;
+                                         font-family: "Open Sans";
+                                         margin: 20px 0 20px 0;
+                                         color: %s', main_text_color())),
       br(),
       span(paste0("A simplified way to search and analyze topics of interest related to ",
                   get_configs()$location_name),
-           style = "color: #32566F"),
+           style = sprintf("color: %s", main_text_color())),
       br(),
       actionLink("more_info", paste0("Click for More Info")),
       width = 12

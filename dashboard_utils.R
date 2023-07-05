@@ -384,7 +384,6 @@ get_document_summary <- function(query,
                                  api_user,
                                  api_password,
                                  api_version) {
-  # cleaned_query = URLencode(query)
   body = list(query = query)
   response = api_url %>%
     paste0("/embeddings_api/", api_version, "/summarize") %>%
@@ -545,7 +544,7 @@ format_title <- function(title_str, title_url, add_link) {
   if (link_present & add_link) {
     formatted_str = a(title_str, href = title_url, target = "_blank")
   } else {
-    formatted_str = span(title_str, style = "color: #0275d8;")
+    formatted_str = span(title_str, style = sprintf("color: %s;", titles_color()))
   }
 
   return(formatted_str)
