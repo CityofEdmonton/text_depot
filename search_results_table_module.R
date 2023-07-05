@@ -272,10 +272,7 @@ searchResultsTable <- function(input, output, session,
     observeEvent(input$doc_info, {
       output$summary_section = renderText({""})
     })
-
-    # Need this?
-    output$summary_section = renderText({""})
-
+    
     observeEvent(input$summary_button, {
       req(input$summary_button)
       req(input$summary_button != 0)
