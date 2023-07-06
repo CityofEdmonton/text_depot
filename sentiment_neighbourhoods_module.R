@@ -78,7 +78,7 @@ mapPlot <- function(input, output, session,
     aggregations = query_text_depot(query_info = query_info(),
                                     aggregates_json = sentimentNeighbourhoodsQuery())
     aggregations = parse_aggregates(es_results = aggregations)
-          
+
     bbox = sf::st_bbox(neighbourhoods)
     min.lat = as.numeric(bbox$ymin)
     max.lat = as.numeric(bbox$ymax)
@@ -114,17 +114,19 @@ mapPlot <- function(input, output, session,
 
       pal = colorNumeric(palette = "Blues", domain = hoods_df$doc_count, reverse = FALSE)
       
-      colours = get_sentiment_colourmap()
-      
       hoods_df$label = ifelse(!is.na(hoods_df$avg_sentiment),
                               as.character(cut(hoods_df$avg_sentiment, 
-                                              breaks = c(colour_map$lower, Inf), 
-                                              labels = colour_map$label, 
-                                              include.lowest = TRUE, 
-                                              right = TRUE)),
+                                               breaks = c(colour_map$lower, Inf), 
+                                               labels = colour_map$label, 
+                                               include.lowest = TRUE, 
+                                               right = TRUE)),
                               NA)
+      # Remove repeats of "NEUTRAL" so join doesnt cause issues:
+      colours = colour_map %>% 
+        select(colour, legend_text_colour, label) %>% 
+        distinct()
       hoods_df = dplyr::left_join(hoods_df, colours, by = c("label" = "label"))
-      
+
       if (selected == "Sentiment") {
         map = map %>% 
           addPolygons(
@@ -192,7 +194,7 @@ mapPlot <- function(input, output, session,
   })
   
   output$sentiment_colour_scale <- renderPlot({
-    colour_map <- get_sentiment_colourmap()
+    colour_map = get_sentiment_colourmap()
     sentimentLegendPlot(colour_mapping = colour_map)
   })
 }
