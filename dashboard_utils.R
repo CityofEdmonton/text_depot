@@ -381,11 +381,10 @@ query_text_depot <- function(query_info = NULL,
 get_document_summary <- function(query,
                                  api_url,
                                  api_user,
-                                 api_password,
-                                 api_version) {
+                                 api_password) {
   body = list(query = query)
   response = api_url %>%
-    paste0("/embeddings_api/", api_version, "/summarize") %>%
+    paste0("/summarize") %>%
     httr::POST(authenticate(api_user, api_password), body = body, encode = "json") 
     
   if (response$status != 200) { 

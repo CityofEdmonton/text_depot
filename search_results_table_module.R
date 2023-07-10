@@ -282,8 +282,7 @@ searchResultsTable <- function(input, output, session,
       summary = get_document_summary(display_text, 
                                      configs$embedding_api_host,
                                      configs$embedding_api_user,
-                                     configs$embedding_api_password,
-                                     configs$embedding_api_version)
+                                     configs$embedding_api_password)
       output$summary_section = renderUI({
         div(
           style = sprintf("width: 90%%; margin: auto; background-color: %s; border-radius: 10px; padding: 5px; font-size: 15px", secondary_div_background()),
