@@ -13,6 +13,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   libharfbuzz-dev \
   libfribidi-dev \
   libgit2-dev \
+  libfontconfig1-dev \ 
   && rm -rf /var/lib/apt/lists/*
 
 
@@ -25,6 +26,10 @@ RUN case ${TARGETPLATFORM} in \
   "linux/arm64") \
   echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/2023-05-30'))" >> $R_HOME/etc/Rprofile.site ;; \
 esac
+
+# https://github.com/daattali/shinycssloaders/issues/82
+RUN R -e "options(warn = 2); install.packages('devtools', Ncpus = max(1L, parallel::detectCores()))"
+RUN R -e "options(warn = 2); devtools::install_github('daattali/shinycssloaders')"
 
 RUN R -e "options(warn = 2); install.packages(c('assertthat', \
   'data.table', \
@@ -44,7 +49,7 @@ RUN R -e "options(warn = 2); install.packages(c('assertthat', \
   'promises', \
   'rmarkdown', \
   'shiny', \
-  'shinycssloaders', \
+  # 'shinycssloaders', \
   'shinydashboard', \
   'shinyjs', \
   'shinyWidgets', \
@@ -52,7 +57,7 @@ RUN R -e "options(warn = 2); install.packages(c('assertthat', \
   'stringr', \
   'timetk', \
   'htmltools', \
-  'xml2'))"
+  'xml2'), Ncpus = max(1L, parallel::detectCores()))"
 
 # Add certs for accessing elastic search servers that require them
 COPY elasticsearch/certificates/*.crt /usr/local/share/ca-certificates/
