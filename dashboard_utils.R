@@ -378,6 +378,23 @@ query_text_depot <- function(query_info = NULL,
   results
 }
 
+get_document_summary <- function(query,
+                                 api_url,
+                                 api_user,
+                                 api_password) {
+  body = list(query = query, max_summary_length = 150)
+  response = api_url %>%
+    paste0("/summarize") %>%
+    httr::POST(authenticate(api_user, api_password), body = body, encode = "json") 
+    
+  if (response$status != 200) { 
+    stop(paste0("ERROR From API at ", api_url, " with user ", api_user, " in get_embedding_vector(): ", as.character(response))) 
+  }
+
+  content = httr::content(response)
+  content$summary
+}
+
 get_embedding_vector <- function(query, 
                                  api_url, 
                                  api_user, 
@@ -525,7 +542,7 @@ format_title <- function(title_str, title_url, add_link) {
   if (link_present & add_link) {
     formatted_str = a(title_str, href = title_url, target = "_blank")
   } else {
-    formatted_str = span(title_str, style = "color: #0275d8;")
+    formatted_str = span(title_str, style = sprintf("color: %s;", titles_color()))
   }
 
   return(formatted_str)
