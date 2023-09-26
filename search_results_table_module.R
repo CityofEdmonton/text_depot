@@ -255,7 +255,7 @@ searchResultsTable <- function(input, output, session,
         ),
         # Only turn on summaries if we've specified an API Host,
         # and this is a long piece of text:
-        if (!is.null(get_configs()$embedding_api_host) & (row$num_chars > 1000)) {
+        if (!is.null(get_configs()$summarization_api_url) & (row$num_chars > 1000)) {
           actionButton(session$ns("summary_button"), 
                        "Summarize Text", 
                        icon("robot"), 
@@ -280,9 +280,9 @@ searchResultsTable <- function(input, output, session,
 
       shinycssloaders::showPageSpinner(caption = "🤖 Reading Text... 🤖", type = 4, color = main_text_color())
       summary = get_document_summary(display_text, 
-                                     configs$embedding_api_host,
-                                     configs$embedding_api_user,
-                                     configs$embedding_api_password)
+                                     configs$summarization_api_url,
+                                     configs$summarization_api_user,
+                                     configs$summarization_api_password)
       output$summary_section = renderUI({
         div(
           style = sprintf("width: 90%%; margin: auto; background-color: %s; border-radius: 10px; padding: 5px; font-size: 15px", secondary_div_background()),
