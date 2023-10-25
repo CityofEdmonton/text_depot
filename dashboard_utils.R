@@ -28,6 +28,11 @@ get_configs = memoise(get_configs_from_file)
 
 connect_ES <- function() {
   prop <- get_configs()
+  # Uncomment the below 3 lines when connecting to an elasticsearch server
+  # without certificates (e.g. a temporary test server)
+  # crul::set_opts(ssl_verifyhost = FALSE)
+  # crul::set_opts(ssl_verifypeer = FALSE)
+  # crul::set_opts(ssl_verifystatus = FALSE)
   x <- elastic::connect(host = prop$apiurl,
                         user = prop$apiuser,
                         pwd = prop$apipassword,

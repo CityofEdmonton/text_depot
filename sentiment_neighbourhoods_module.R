@@ -85,7 +85,7 @@ mapPlot <- function(input, output, session,
     min.lng = as.numeric(bbox$xmin)
     max.lng = as.numeric(bbox$xmax)
     map = leaflet() %>%
-      addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
+      addProviderTiles(providers$Stadia.StamenTonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
       fitBounds(min.lng, min.lat, max.lng, max.lat)
 
     if (nrow(aggregations$hoods.names.buckets) > 0) {
