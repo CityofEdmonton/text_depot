@@ -30,5 +30,5 @@ Our workflow contained the following components:
 
 ![Overall Workflow](workflow.png)
 
-This repository contains the dashboard code (Blue above) for Text Depot. The green components were scheduled with cron jobs, and keep the indexes up-to-date in the ElasticSearch Database. We wrote a custom Parser for each data source, and a single Annotator class that adds the fields below to each document before insertion. The orange components were added for authentication and embeddings-based search, and are optional components. 
+This repository contains the dashboard code (Blue above) for Text Depot. The green components were scheduled with cron jobs, and keep the indexes up-to-date in the ElasticSearch Database. We wrote a custom Parser for each data source, and a single Annotator class that adds the `[nieghbourhoods, sentiment, embeddings]` fields to each document and inserts them. The orange components were added for authentication and embeddings-based search, and are optional components. 
 
