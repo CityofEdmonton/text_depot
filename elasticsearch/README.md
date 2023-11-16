@@ -109,3 +109,18 @@ Each data source should be stored in its own Elastic Search index. The index mus
 ```
 
 Then, add your indexes/aliases to the `default_index_aliases` parameter in `.configs`.
+
+## Inserting Data
+
+Each of these indexes should be filled with documents with the following fields:
+
+| Field  | Expected Data | Status |
+| ------------- | ------------- | ------------- |
+| date  | 2023-01-01 | Required  |
+| text  | This is the text in a document. | Required  |
+| source_title  | Council Report for January 2023 | Required  |
+| sentiment  | Float in [-1, 1] | Required  |
+| neighbourhoods  | ["Downtown", "Northwest"] | Required  |
+| source_url  |  | Optional  |
+| parent_source_title  | Council Agenda 2023. | Optional  |
+| parent_source_url  |  | Optional  |

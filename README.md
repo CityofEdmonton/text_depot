@@ -8,31 +8,21 @@
 
 Text Depot is a tool to search and analyze topics of interest within a large database of text data. The Text Depot dashboard (this repo) provides a front-end to a set of indexes in ElasticSearch. To use this repository, you must provide one or more [Elastic Search](http://www.elastic.co) indexes in a particular format.
 
-## Local Machine Setup
+## Setup
 
-1. Clone this repo.
-2. Run `cp .configs_sample .configs` and fill in the relevant values.
-
-### Running Locally
-
-1. Install any missing libraries with `install.packages("DT")` (for example). A list of required libraries can be found in the included `Dockerfile`
-2. Run `Rscript run_text_depot_dashboard.R`
-
-### Running via Docker
-
-1. Optionally, create a `.dockerignore` file to exclude any local files.
-2. Use the provided `Dockerfile` to build and run the app:
-
+1. Setup Elastic Search Server
+2. Create one or more index using Text Depot mappings.
+3. Clone this repo.
+4. Run `cp .configs_sample .configs` and fill in the relevant values.
+5. Build and run docker container:
 ```
-$ DOCKER_BUILDKIT=1 docker build -t text_depot_dashboard .
-$ docker run -it -p 8080:3838 text_depot_dashboard
+    DOCKER_BUILDKIT=1 docker build -t text_depot_dashboard . && docker run -it -p 8080:3838 text_depot_dashboard
 ```
+6. Open the dashboard on your browser: [http://localhost:8080](http://localhost:8080)
 
-3. Open the dashboard on your browser: [http://localhost:8080](http://localhost:8080)
+## Elastic Search
 
-## ElasticSearch
-
-Each data source should be stored in its own Elastic Search index. For more information, see [elasticsearch/](elasticsearch/)
+Each data source should be stored in its own Elastic Search index. For more information on how to configure your Elastic Search server, see [elasticsearch/](elasticsearch/)
 
 ## Notes
 
