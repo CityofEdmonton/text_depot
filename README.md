@@ -1,4 +1,10 @@
-<img src="www/text_depot_icon/TextDepotIcon_TextImage_S.jpg" width="25%">
+
+
+![Text Depot in action](www/TD_demo_short.gif)
+
+<hr/>
+
+<img src="www/text_depot_icon/TextDepotIcon_TextBeside_M.jpg" width="60%">
 
 Text Depot is a tool to search and analyze topics of interest within a large database of text data. The Text Depot dashboard (this repo) provides a front-end to a set of indexes in ElasticSearch. To use this repository, you must provide one or more [Elastic Search](http://www.elastic.co) indexes in a particular format.
 

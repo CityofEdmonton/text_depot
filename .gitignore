@@ -10,3 +10,4 @@ decode.sh
 .local/
 .rstudio/
 .dockerignore
+.vscode
