@@ -16,7 +16,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   libfontconfig1-dev \ 
   && rm -rf /var/lib/apt/lists/*
 
-
 # Freezing packages:
 # get from https://packagemanager.rstudio.com/client/#/repos/1/overview
 ARG PACKAGEDATE=2023-10-23
@@ -63,6 +62,21 @@ RUN R -e "options(warn = 2); install.packages(c('assertthat', \
 # Add certs for accessing elastic search servers that require them
 COPY elasticsearch/certificates/*.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
+
+# There is an issue using SSL on AMR images on mac due to this: 
+# https://stackoverflow.com/questions/75763525/curl-35-error0a000152ssl-routinesunsafe-legacy-renegotiation-disabled/76012131#76012131
+# The following line fixes the issue, so that project images can once again
+# use remotes::install_gitlab to install city of edmonton packages.
+# We have put it in the base image in order to make things simple, however we 
+# should keep an eye out for a fix to this issue, and remove this line when that 
+# happens.
+# Note, this could be called in the same RUN command as install_gitlab, and then
+# sed -i "$d" /etc/ssl/openssl.cnf  could be used to "undo" it, but we decided 
+# against this approach because this would mean the fix is distributed across
+# many projects.
+# Note that this fix actually gives us the same security setup as we had on 
+# earlier (0.3.*) images.
+RUN echo "Options = UnsafeLegacyRenegotiation" >> /etc/ssl/openssl.cnf 
 
 RUN mkdir /shinyapp
 WORKDIR /shinyapp/
