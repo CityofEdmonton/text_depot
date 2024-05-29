@@ -308,10 +308,14 @@ stats_for_field <- function(conn, index, field, numeric = FALSE) {
   result <- elastic::Search(conn, index = index, body = aggs, size = 0)
 
   if (numeric) {
-    return(list(min = result$aggregations$fieldstats$min,
-                max = result$aggregations$fieldstats$max,
-                avg = result$aggregations$fieldstats$avg,
-                sum = result$aggregations$fieldstats$sum))
+    min = ifelse(is.null(result$aggregations$fieldstats$min), NA, result$aggregations$fieldstats$min)
+    max = ifelse(is.null(result$aggregations$fieldstats$max), NA, result$aggregations$fieldstats$max)
+    avg = ifelse(is.null(result$aggregations$fieldstats$avg), NA, result$aggregations$fieldstats$avg)
+    sum = ifelse(is.null(result$aggregations$fieldstats$sum), NA, result$aggregations$fieldstats$sum)
+    return(list(min = min,
+                max = max,
+                avg = avg,
+                sum = sum))
   } else {
     return(list(min = result$aggregations$fieldstats$min_as_string,
                 max = result$aggregations$fieldstats$max_as_string,
