@@ -39,10 +39,14 @@ volumeTimeline <- function(input, output, session,
     aggregations = parse_aggregates(es_results = aggregations)
 
     plot_hits <- aggregations$month_counts.buckets %>%
-      transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
+# >       transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), Sentiment = sentiment.value, index_name = index, Count = doc_count) %>%
+      # transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
+      transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), index_name = index, Count = doc_count) %>%
       left_join(select(data_set_info(), index_name, display_name), by = "index_name") %>% # to get display name
       mutate(Date = strftime(Date, format = "%Y-%m")) %>%
       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
+      # mutate(Count = ifelse(Count == 0, NA, Count)) %>%
+      # arrange(Date) %>%
       arrange(display_name)
 
     # pad months:
@@ -54,7 +58,7 @@ volumeTimeline <- function(input, output, session,
       filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
       group_by(display_name) %>%
       transmute(Date = list( seq(lubridate::floor_date(date_range_min, unit = "month"),
-                                 lubridate::ceiling_date(date_range_max, unit = "month"),
+                                 lubridate::ceiling_date(date_range_max, unit = "month") - as.difftime(1, unit = "days"),
                                  by = "months")) ) %>%
       ungroup() %>%
       tidyr::unnest_longer(Date) %>%
@@ -67,6 +71,41 @@ volumeTimeline <- function(input, output, session,
     return(plot_hits)
 
   })
+
+# 8,9c8,9
+# <     plot_hits <- aggregations$month_counts.buckets %>%
+# <       transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
+# ---
+# >     plot_hits = aggregations$month_counts.buckets %>%
+# >       transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), Sentiment = sentiment.value, index_name = index, Count = doc_count) %>%
+# 11,12c11,13
+# <       mutate(Date = strftime(Date, format = "%Y-%m")) %>%
+# <       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
+# ---
+# >       mutate(Count = ifelse(Count == 0, NA, Count)) %>%
+# >       arrange(Date) %>%
+# >       filter(!is.na(Sentiment)) %>%
+# 15,33d15
+# <     # pad months:
+# <     # I can't find a way to do this in the ES query, bc the query first does the
+# <     # search (so returns a subset of docs), then does the aggregation.
+# <     # This means that for histogram aggregation, it never returns bins before the
+# <     # first, or after the last non-zero value
+# <     all_months <- data_set_info() %>%
+# <       filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
+# <       group_by(display_name) %>%
+# <       transmute(Date = list( seq(lubridate::floor_date(date_range_min, unit = "month"),
+# <                                  lubridate::ceiling_date(date_range_max, unit = "month"),
+# <                                  by = "months")) ) %>%
+# <       ungroup() %>%
+# <       tidyr::unnest_longer(Date) %>%
+# <       mutate(fill_value = 0)
+# < 
+# <     plot_hits <- plot_hits %>%
+# <       right_join(all_months, by = c("Date" = "Date", "display_name" = "display_name")) %>%
+# <       mutate(Count = dplyr::coalesce(Count, fill_value)) # when count is NA, use the fill value
+# < 
+
 
   output$volume_timeline_plot <- plotly::renderPlotly({
 
@@ -103,8 +142,21 @@ volumeTimeline <- function(input, output, session,
                                   "Date: ", format(Date, format = "%b-%Y")))) %>%
       suppressWarnings()
 
+    not_enough_data <- plot_data() %>%
+      group_by(display_name) %>%
+      filter(n() <= 1)
+
+    if (nrow(not_enough_data) > 0) {
+      p <- p + geom_point(data = not_enough_data, mapping = aes(text = paste0("<b>", display_name, '</b>\n',
+                                                                              "Document Count: ", Count, '\n',
+                                                                              "Date: ", format(Date, format = "%b-%Y")))) %>%
+        suppressWarnings()
+    }
+
+
     p1 <- plotly::ggplotly(p, tooltip = c("text"), dynamicTicks = TRUE)  %>%
       layout(margin = list(l = 75, r = 75))
+    # p1 = p
 
     # loop over y axes (facets) in the plotly plot:
     for (x in names(p1$x$layout)[grepl("yaxis", names(p1$x$layout))]) {
