@@ -657,7 +657,8 @@ plot_timeseries_td <- function(plot_data, date_var, value_var, group_var, colour
           smooth_degree         = 2,
           smooth_message        = FALSE)
         ) %>%
-        dplyr::ungroup()
+        dplyr::ungroup() %>%
+        suppressWarnings()
     } else {
       show_trend = FALSE
     }

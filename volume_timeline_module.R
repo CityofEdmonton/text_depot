@@ -73,7 +73,7 @@ volumeTimeline <- function(input, output, session,
     p <- plot_data() %>%
       plot_timeseries_td(
         date_var = Date,
-        value_var = Count,
+        value_var = as.integer(Count),
         group_var = display_name,
         colour_var = display_name,
         data_set_info = data_set_info(),
