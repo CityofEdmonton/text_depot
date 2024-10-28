@@ -72,41 +72,6 @@ volumeTimeline <- function(input, output, session,
 
   })
 
-# 8,9c8,9
-# <     plot_hits <- aggregations$month_counts.buckets %>%
-# <       transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
-# ---
-# >     plot_hits = aggregations$month_counts.buckets %>%
-# >       transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), Sentiment = sentiment.value, index_name = index, Count = doc_count) %>%
-# 11,12c11,13
-# <       mutate(Date = strftime(Date, format = "%Y-%m")) %>%
-# <       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
-# ---
-# >       mutate(Count = ifelse(Count == 0, NA, Count)) %>%
-# >       arrange(Date) %>%
-# >       filter(!is.na(Sentiment)) %>%
-# 15,33d15
-# <     # pad months:
-# <     # I can't find a way to do this in the ES query, bc the query first does the
-# <     # search (so returns a subset of docs), then does the aggregation.
-# <     # This means that for histogram aggregation, it never returns bins before the
-# <     # first, or after the last non-zero value
-# <     all_months <- data_set_info() %>%
-# <       filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
-# <       group_by(display_name) %>%
-# <       transmute(Date = list( seq(lubridate::floor_date(date_range_min, unit = "month"),
-# <                                  lubridate::ceiling_date(date_range_max, unit = "month"),
-# <                                  by = "months")) ) %>%
-# <       ungroup() %>%
-# <       tidyr::unnest_longer(Date) %>%
-# <       mutate(fill_value = 0)
-# < 
-# <     plot_hits <- plot_hits %>%
-# <       right_join(all_months, by = c("Date" = "Date", "display_name" = "display_name")) %>%
-# <       mutate(Count = dplyr::coalesce(Count, fill_value)) # when count is NA, use the fill value
-# < 
-
-
   output$volume_timeline_plot <- plotly::renderPlotly({
 
     req(plot_data)
