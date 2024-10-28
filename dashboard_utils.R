@@ -11,18 +11,12 @@ search_fields <- function() {
 
 get_configs_from_file <- function() {
   if (file.exists('.configs')) {
-    prop <- yaml::read_yaml('.configs')
+    config = yaml::read_yaml('.configs')
   } else {
-    if (file.exists('decode.sh')) {
-      result = system('./decode.sh ./app_vault_dir/.configs.enc ./app_key_dir/key.bin', intern = TRUE)
-      configs_str = paste0(result, collapse = "\n")
-      prop = yaml::yaml.load(configs_str)
-    } else {
-      stop(".configs file not found!")
-    }
+    config = yaml::read_yaml("./app_vault_dir/.configs")
   }
 
-  prop
+  config
 }
 get_configs = memoise(get_configs_from_file)
 
@@ -641,17 +635,27 @@ auto_smooth <- function(idx, x,
 plot_timeseries_td <- function(plot_data, date_var, value_var, group_var, colour_var, data_set_info, show_trend = TRUE, scales = "fixed", date_format = "%Y-%b") {
 
   if (show_trend == TRUE) {
-    plot_data <- plot_data %>%
-      group_by({{group_var}}) %>%
-      mutate(smooth_value = auto_smooth(
-        idx                   = {{date_var}},
-        x                     = {{value_var}},
-        smooth_period         = "auto",
-        smooth_span           = NULL,
-        smooth_degree         = 2,
-        smooth_message        = FALSE)
-      ) %>%
-      dplyr::ungroup()
+    num_groups = plot_data %>% 
+      pull({{date_var}}) %>% 
+      unique() %>%
+      length()
+
+    if (num_groups > 1) { # Cant find a trend with only one data point. 
+      plot_data <- plot_data %>%
+        group_by({{group_var}}) %>%
+        mutate(smooth_value = auto_smooth(
+          idx                   = {{date_var}},
+          x                     = {{value_var}},
+          smooth_period         = "auto",
+          smooth_span           = NULL,
+          smooth_degree         = 2,
+          smooth_message        = FALSE)
+        ) %>%
+        dplyr::ungroup() %>%
+        suppressWarnings()
+    } else {
+      show_trend = FALSE
+    }
   }
 
   p <- plot_data %>%

@@ -45,16 +45,12 @@ volumeTimeline <- function(input, output, session,
       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
       arrange(display_name)
 
-    # pad months:
-    # I can't find a way to do this in the ES query, bc the query first does the
-    # search (so returns a subset of docs), then does the aggregation.
-    # This means that for histogram aggregation, it never returns bins before the
-    # first, or after the last non-zero value
+    # Pad months:
     all_months <- data_set_info() %>%
       filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
       group_by(display_name) %>%
       transmute(Date = list( seq(lubridate::floor_date(date_range_min, unit = "month"),
-                                 lubridate::ceiling_date(date_range_max, unit = "month"),
+                                 lubridate::ceiling_date(date_range_max, unit = "month") - as.difftime(1, unit = "days"),
                                  by = "months")) ) %>%
       ungroup() %>%
       tidyr::unnest_longer(Date) %>%
@@ -76,7 +72,7 @@ volumeTimeline <- function(input, output, session,
     p <- plot_data() %>%
       plot_timeseries_td(
         date_var = Date,
-        value_var = Count,
+        value_var = as.integer(Count),
         group_var = display_name,
         colour_var = display_name,
         data_set_info = data_set_info(),
@@ -85,17 +81,6 @@ volumeTimeline <- function(input, output, session,
         date_format = "%Y-%b"
       )
 
-    # leaving in here some code to set ggplot facets to start x at zero. plotly conversion messes all this up unfortunately
-    ## not working:
-    # dummy_data <- tidyr::crossing(display_name = unique(plot_data()$display_name), Count = c(0,50), Date = median(plot_data()$Date))
-    # p <- p + geom_blank(data = dummy_data)
-    # working:
-    # p <- p + scale_y_continuous(limits=c(0,max(plot_data()$Count)))
-    #p <- p + scale_y_continuous(limits=c(0,NA))
-    # issue is the plotly reverses the above...
-
-    # hack: blank dummy line with text aesthetic to define the tooltip text that
-    # is shown in the plotly plot:
     # https://stackoverflow.com/questions/44569551/date-format-in-hover-for-ggplot2-and-plotly
     p <- p +
       geom_line(aes(text = paste0("<b>", display_name, '</b>\n',
@@ -103,7 +88,19 @@ volumeTimeline <- function(input, output, session,
                                   "Date: ", format(Date, format = "%b-%Y")))) %>%
       suppressWarnings()
 
-    p1 <- plotly::ggplotly(p, tooltip = c("text"), dynamicTicks = TRUE)  %>%
+    not_enough_data <- plot_data() %>%
+      group_by(display_name) %>%
+      filter(n() <= 1)
+
+    if (nrow(not_enough_data) > 0) {
+      p <- p + geom_point(data = not_enough_data, mapping = aes(text = paste0("<b>", display_name, '</b>\n',
+                                                                              "Document Count: ", Count, '\n',
+                                                                              "Date: ", format(Date, format = "%b-%Y")))) %>%
+        suppressWarnings()
+    }
+
+
+    p1 <- plotly::ggplotly(p, tooltip = c("text"), dynamicTicks = TRUE) %>%
       layout(margin = list(l = 75, r = 75))
 
     # loop over y axes (facets) in the plotly plot:
