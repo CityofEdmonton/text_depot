@@ -81,15 +81,6 @@ volumeTimeline <- function(input, output, session,
         date_format = "%Y-%b"
       )
 
-    # leaving in here some code to set ggplot facets to start x at zero. plotly conversion messes all this up unfortunately
-    ## not working:
-    # dummy_data <- tidyr::crossing(display_name = unique(plot_data()$display_name), Count = c(0,50), Date = median(plot_data()$Date))
-    # p <- p + geom_blank(data = dummy_data)
-    # working:
-    # p <- p + scale_y_continuous(limits=c(0,max(plot_data()$Count)))
-    #p <- p + scale_y_continuous(limits=c(0,NA))
-    # issue is the plotly reverses the above...
-
     # https://stackoverflow.com/questions/44569551/date-format-in-hover-for-ggplot2-and-plotly
     p <- p +
       geom_line(aes(text = paste0("<b>", display_name, '</b>\n',
