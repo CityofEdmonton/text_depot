@@ -116,7 +116,7 @@ volumeTimeline <- function(input, output, session,
     }
 
 
-    p1 <- plotly::ggplotly(p, tooltip = c("text"), dynamicTicks = TRUE)  %>%
+    p1 <- plotly::ggplotly(p, tooltip = c("text"), dynamicTicks = TRUE) %>%
       layout(margin = list(l = 75, r = 75))
 
     # loop over y axes (facets) in the plotly plot:
