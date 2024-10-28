@@ -61,8 +61,6 @@ sentimentTimeline <- function(input, output, session,
         date_format = "%Y-%b"
       )
 
-    # hack: blank dummy line with text aesthetic to define the tooltip text that
-    # is shown in the plotly plot:
     # https://stackoverflow.com/questions/44569551/date-format-in-hover-for-ggplot2-and-plotly
     p <- p +
       geom_line(aes(text = paste0("<b>", display_name, '</b>\n',
