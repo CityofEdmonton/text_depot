@@ -46,11 +46,7 @@ volumeTimeline <- function(input, output, session,
       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
       arrange(display_name)
 
-    # pad months:
-    # I can't find a way to do this in the ES query, bc the query first does the
-    # search (so returns a subset of docs), then does the aggregation.
-    # This means that for histogram aggregation, it never returns bins before the
-    # first, or after the last non-zero value
+    # Pad months:
     all_months <- data_set_info() %>%
       filter(index_name %in% unique(aggregations$month_counts.buckets$index)) %>%
       group_by(display_name) %>%
