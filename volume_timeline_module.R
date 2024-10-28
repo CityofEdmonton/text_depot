@@ -39,14 +39,11 @@ volumeTimeline <- function(input, output, session,
     aggregations = parse_aggregates(es_results = aggregations)
 
     plot_hits <- aggregations$month_counts.buckets %>%
-# >       transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), Sentiment = sentiment.value, index_name = index, Count = doc_count) %>%
-      # transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
-      transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), index_name = index, Count = doc_count) %>%
+      transmute(Date = as.Date(key_as_string), Count = doc_count, index_name = index) %>%
+      # transmute(Date = as.Date(stringr::str_sub(key_as_string, 1, 10)), index_name = index, Count = doc_count) %>%
       left_join(select(data_set_info(), index_name, display_name), by = "index_name") %>% # to get display name
       mutate(Date = strftime(Date, format = "%Y-%m")) %>%
       mutate(Date = as.Date(paste0(Date, "-01"))) %>%
-      # mutate(Count = ifelse(Count == 0, NA, Count)) %>%
-      # arrange(Date) %>%
       arrange(display_name)
 
     # pad months:
