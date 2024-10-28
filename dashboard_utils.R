@@ -11,18 +11,12 @@ search_fields <- function() {
 
 get_configs_from_file <- function() {
   if (file.exists('.configs')) {
-    prop <- yaml::read_yaml('.configs')
+    config = yaml::read_yaml('.configs')
   } else {
-    if (file.exists('decode.sh')) {
-      result = system('./decode.sh ./app_vault_dir/.configs.enc ./app_key_dir/key.bin', intern = TRUE)
-      configs_str = paste0(result, collapse = "\n")
-      prop = yaml::yaml.load(configs_str)
-    } else {
-      stop(".configs file not found!")
-    }
+    config = yaml::read_yaml("./app_vault_dir/.configs")
   }
 
-  prop
+  config
 }
 get_configs = memoise(get_configs_from_file)
 
