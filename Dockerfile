@@ -16,15 +16,14 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update \
   libfontconfig1-dev \ 
   && rm -rf /var/lib/apt/lists/*
 
-# Freezing packages:
-# get from https://packagemanager.rstudio.com/client/#/repos/1/overview
+# Freezing packages. Get available URLs at https://packagemanager.posit.co/client/#/repos/cran/setup
 ARG PACKAGEDATE=2023-10-23
 ARG TARGETPLATFORM
 RUN case ${TARGETPLATFORM} in \
   "linux/amd64") \
-  echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/__linux__/jammy/${PACKAGEDATE}'))" >> $R_HOME/etc/Rprofile.site ;; \
+  echo "options(repos = c(REPO_NAME = 'https://packagemanager.posit.co/cran/__linux__/jammy/${PACKAGEDATE}'))" >> $R_HOME/etc/Rprofile.site ;; \
   "linux/arm64") \
-  echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/cran/${PACKAGEDATE}'))" >> $R_HOME/etc/Rprofile.site ;; \
+  echo "options(repos = c(REPO_NAME = 'https://packagemanager.posit.co/cran/${PACKAGEDATE}'))" >> $R_HOME/etc/Rprofile.site ;; \
 esac
 
 # https://github.com/daattali/shinycssloaders/issues/82
