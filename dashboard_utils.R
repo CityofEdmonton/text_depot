@@ -387,7 +387,7 @@ get_document_summary <- function(query,
                                  api_password) {
   body = list(query = query, max_summary_length = 150)
   response = api_url %>%
-    paste0("/summarize") %>%
+    paste0("summarize") %>%
     httr::POST(authenticate(api_user, api_password), body = body, encode = "json") 
     
   if (response$status != 200) { 
